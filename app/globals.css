@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --background: #0f1412;
+  --surface: #171d1a;
+  --card: #1f2824;
+
+  --primary: #7bc67b;
+  --primary-hover: #69b869;
+
+  --secondary: #79b8ff;
+
+  --warning: #e8c36a;
+  --danger: #d97777;
+
+  --text: #e7ece9;
+  --text-muted: #a7b0aa;
+
+  --border: #2c3731;
+
+  /* Radius */
+  --radius-card: 1.25rem;
+
+  /* Spacing */
+  --page-padding: 1rem;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+
+  min-height: 100vh;
+
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+/* Base elements */
+
+button {
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+
+  border: 1px solid
+    var(--border);
+
+  background:
+    var(--surface);
+
+  color: var(--text);
+
+  border-radius: 16px;
+
+  padding:
+    0.875rem 1rem;
+
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color:
+    var(--primary);
+}
+
+* {
+  box-sizing:
+    border-box;
+}

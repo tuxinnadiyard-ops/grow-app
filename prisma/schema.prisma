@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RunStage {
+  VEG
+  FLOWER
+  DRY
+  CURE
+}
+
+enum TaskStatus {
+  TODO
+  DONE
+}
+
+enum JournalEntryType {
+  WATERING
+  FEEDING
+  NOTE
+  ISSUE
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  password     String
+  sessionToken String?     @unique
+  createdAt    DateTime    @default(now())
+
+  growSpaces   GrowSpace[]
+}
+
+model GrowSpace {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+
+  createdAt   DateTime  @default(now())
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tents       Tent[]
+}
+
+model Tent {
+  id          String     @id @default(cuid())
+  name        String
+  surfaceM2   Float?
+  createdAt   DateTime   @default(now())
+
+  growSpaceId String
+  growSpace   GrowSpace  @relation(fields: [growSpaceId], references: [id], onDelete: Cascade)
+
+  runs        Run[]
+}
+
+model Run {
+  id          String     @id @default(cuid())
+
+  strain      String
+  stage       RunStage   @default(VEG)
+
+  startDate   DateTime   @default(now())
+  isActive    Boolean    @default(true)
+
+  createdAt   DateTime   @default(now())
+
+  tentId      String
+  tent        Tent       @relation(fields: [tentId], references: [id], onDelete: Cascade)
+
+  journalEntries JournalEntry[]
+  observations Observation[]
+  tasks Task[]
+  photos Photo[]
+}
+
+model JournalEntry {
+  id          String           @id @default(cuid())
+
+  type        JournalEntryType
+  note        String?
+
+  metadata    Json?
+
+  createdAt   DateTime         @default(now())
+
+  runId       String
+  run         Run              @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model Observation {
+  id              String   @id @default(cuid())
+
+  vigour          Int
+  leafColor       Int
+  stressLevel     Int
+  growthSpeed     Int
+  healthScore     Int
+
+  stressDetected  Boolean @default(false)
+  anomalyDetected Boolean @default(false)
+
+  note            String?
+
+  createdAt       DateTime @default(now())
+
+  runId           String
+  run             Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id               String   @id @default(cuid())
+
+  title            String
+  note             String?
+
+  dueDate          DateTime?
+
+  status           TaskStatus @default(TODO)
+
+  recurrenceRule   String?
+
+  createdAt        DateTime @default(now())
+
+  runId            String
+  run              Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model Photo {
+  id          String   @id @default(cuid())
+
+  url         String
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  runId       String
+  run         Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
