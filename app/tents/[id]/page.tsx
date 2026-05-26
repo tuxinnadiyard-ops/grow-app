@@ -143,6 +143,17 @@ export default function TentPage() {
       lightOn: boolean;
     } | null>(null);
 
+    const [snapshots, setSnapshots] =
+      useState<
+        {
+          id: string;
+          temperature: number;
+          humidity: number;
+          lightOn: boolean;
+          timestamp: string;
+        }[]
+      >([]);
+
   async function loadTent() {
     const res =
       await fetch(
@@ -404,11 +415,16 @@ export default function TentPage() {
 
 
   useEffect(() => {
+    if (!tent) {
+      return;
+    }
+
     async function loadEnvironment() {
       try {
-        const response = await fetch(
-          `/api/environment/${params.id}`
-        );
+        const response =
+          await fetch(
+            `/api/environment/${params.id}`
+          );
 
         if (!response.ok) {
           throw new Error(
@@ -420,21 +436,155 @@ export default function TentPage() {
           await response.json();
 
         setEnvironment(data);
+
+
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function loadSnapshots() {
+      try {
+        const runId =
+          tent?.runs?.find(
+            (run) =>
+              run.isActive
+          )?.id;
+
+        if (!runId) {
+          return;
+        }
+
+        const response =
+          await fetch(
+            `/api/snapshots?runId=${runId}`
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to load snapshots"
+          );
+        }
+
+        const data =
+          await response.json();
+
+        setSnapshots(
+          data.slice(0, 10)
+        );
       } catch (error) {
         console.error(error);
       }
     }
 
     loadEnvironment();
+    loadSnapshots();
 
-    const interval = setInterval(
-      loadEnvironment,
-      10000
-    );
+    const interval =
+      setInterval(() => {
+        loadEnvironment();
+        loadSnapshots();
+      }, 10000);
 
     return () =>
       clearInterval(interval);
-  }, [params.id]);
+  }, [params.id, tent]);
+
+
+  function formatRelativeTime(
+    timestamp: string
+  ) {
+    const diffMs =
+      Date.now() -
+      new Date(
+        timestamp
+      ).getTime();
+
+    const diffMinutes =
+      Math.floor(
+        diffMs / 60000
+      );
+
+    if (diffMinutes < 1) {
+      return "Now";
+    }
+
+    if (diffMinutes === 1) {
+      return "1 min ago";
+    }
+
+    if (diffMinutes < 60) {
+      return `${diffMinutes} min ago`;
+    }
+
+    const hours =
+      Math.floor(
+        diffMinutes / 60
+      );
+
+    if (hours === 1) {
+      return "1 hour ago";
+    }
+
+    return `${hours} hours ago`;
+  }
+
+  function getTrend(
+    current: number,
+    previous?: number
+  ) {
+    if (
+      previous === undefined
+    ) {
+      return "→";
+    }
+
+    if (
+      current >
+      previous
+    ) {
+      return "↑";
+    }
+
+    if (
+      current <
+      previous
+    ) {
+      return "↓";
+    }
+
+    return "→";
+  }
+
+  function getStatusBadge(
+    snapshot: {
+      temperature: number;
+      humidity: number;
+    }
+  ) {
+    if (
+      snapshot.temperature >
+      29
+    ) {
+      return "Hot";
+    }
+
+    if (
+      snapshot.humidity >
+      70
+    ) {
+      return "Humid";
+    }
+
+    if (
+      snapshot.humidity <
+      40
+    ) {
+      return "Dry";
+    }
+
+    return "Stable";
+  }
 
 
   if (!tent) {
@@ -767,6 +917,137 @@ export default function TentPage() {
                 <Button onClick={saveObservation}>
                   Save Observation
                 </Button>
+              </div>
+            )}
+          </Card>
+
+          <Card className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">
+                Environment History
+              </h2>
+
+              <p
+                className="text-sm"
+                style={{
+                  color:
+                    "var(--text-muted)",
+                }}
+              >
+                Recent environment
+                snapshots
+              </p>
+            </div>
+
+            {snapshots.length ===
+            0 ? (
+              <p
+                style={{
+                  color:
+                    "var(--text-muted)",
+                }}
+              >
+                No environment data yet
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {snapshots.map(
+                (
+                  snapshot,
+                  index
+                ) => {
+                  const previous =
+                    snapshots[
+                      index + 1
+                    ];
+
+                  const tempTrend =
+                    getTrend(
+                      snapshot.temperature,
+                      previous?.temperature
+                    );
+
+                  const humidityTrend =
+                    getTrend(
+                      snapshot.humidity,
+                      previous?.humidity
+                    );
+
+                  return (
+                    <div
+                      key={
+                        snapshot.id
+                      }
+                      className="rounded-xl border p-4"
+                      style={{
+                        borderColor:
+                          "var(--border)",
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="font-medium">
+                            {
+                              snapshot.temperature
+                            }
+                            °C{" "}
+                            {
+                              tempTrend
+                            }
+                            {" · "}
+                            RH{" "}
+                            {
+                              snapshot.humidity
+                            }
+                            %{" "}
+                            {
+                              humidityTrend
+                            }
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm">
+                            <span
+                              className="rounded-full px-2 py-1"
+                              style={{
+                                background:
+                                  "var(--surface)",
+                              }}
+                            >
+                              {getStatusBadge(
+                                snapshot
+                              )}
+                            </span>
+
+                            <span
+                              style={{
+                                color:
+                                  "var(--text-muted)",
+                              }}
+                            >
+                              Lights{" "}
+                              {snapshot.lightOn
+                                ? "ON"
+                                : "OFF"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div
+                          className="text-sm"
+                          style={{
+                            color:
+                              "var(--text-muted)",
+                          }}
+                        >
+                          {formatRelativeTime(
+                            snapshot.timestamp
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
               </div>
             )}
           </Card>

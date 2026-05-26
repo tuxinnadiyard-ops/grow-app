@@ -78,6 +78,7 @@ model Run {
   observations Observation[]
   tasks Task[]
   photos Photo[]
+  sensorSnapshots SensorSnapshot[]
 }
 
 model JournalEntry {
@@ -143,3 +144,21 @@ model Photo {
   runId       String
   run         Run @relation(fields: [runId], references: [id], onDelete: Cascade)
 }
+
+model SensorSnapshot {
+  id String @id @default(cuid())
+
+  runId String
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  timestamp DateTime @default(now())
+
+  temperature Float
+  humidity Float
+  lightOn Boolean
+
+  createdAt DateTime @default(now())
+
+  @@index([runId, timestamp])
+}
+
