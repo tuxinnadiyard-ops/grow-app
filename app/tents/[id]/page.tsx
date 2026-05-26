@@ -378,7 +378,7 @@ export default function TentPage() {
             {!activeRun ? (
               <p>No active run</p>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={() =>
                     quickJournalEntry(
@@ -476,19 +476,71 @@ export default function TentPage() {
             {!activeRun ||
             activeRun.observations.length ===
               0 ? (
-              <p>No observations yet</p>
+              <p
+                style={{
+                  color:
+                    "var(--text-muted)",
+                }}
+              >
+                No observations yet
+              </p>
             ) : (
-              <>
-                <p className="text-2xl font-semibold">
-                  Health{" "}
-                  {
-                    activeRun
-                      .observations[0]
-                      .healthScore
-                  }
-                  /5
-                </p>
-              </>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-2xl font-semibold">
+                    Health{" "}
+                    {
+                      activeRun
+                        .observations[0]
+                        .healthScore
+                    }
+                    /5
+                  </p>
+
+                  <p
+                    className="text-sm mt-1"
+                    style={{
+                      color:
+                        "var(--text-muted)",
+                    }}
+                  >
+                    {activeRun.observations[0]
+                      .healthScore >= 4
+                      ? "🟢 Healthy"
+                      : activeRun.observations[0]
+                          .healthScore >= 3
+                      ? "🟡 Watch"
+                      : "🔴 Stress"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Card>
+                    V{
+                      activeRun.observations[0]
+                        .vigour
+                    }/5
+                  </Card>
+                  <Card>
+                    L{
+                      activeRun.observations[0]
+                        .leafColor
+                    }/5
+                  </Card>
+                  <Card>
+                    S{
+                      activeRun.observations[0]
+                        .stressLevel
+                    }/5
+                  </Card>
+                  <Card>
+                    G{
+                      activeRun.observations[0]
+                        .growthSpeed
+                    }/5
+                  </Card>
+                </div>
+              </div>
             )}
           </Card>
 
@@ -507,11 +559,30 @@ export default function TentPage() {
                       observation.id
                     }
                   >
-                    Health{" "}
-                    {
-                      observation.healthScore
-                    }
-                    /5
+                    <div>
+                      <p className="font-medium">
+                        Health {
+                          observation.healthScore
+                        }/5
+                      </p>
+                      <p
+                        className="text-sm mt-1"
+                        style={{
+                          color:
+                            "var(--text-muted)",
+                        }}
+                      >
+                        V{
+                          observation.vigour
+                        } • L{
+                          observation.leafColor
+                        } • S{
+                          observation.stressLevel
+                        } • G{
+                          observation.growthSpeed
+                        }
+                      </p>
+                    </div>
                   </Card>
                 )
               )}
@@ -568,11 +639,37 @@ export default function TentPage() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p>
+                          <p
+                            className={
+                              task.status ===
+                              "DONE"
+                                ? "line-through opacity-60"
+                                : ""
+                            }
+                          >
+                            {task.status ===
+                            "DONE"
+                              ? "☑ "
+                              : "☐ "}
                             {
                               task.title
                             }
                           </p>
+
+                          {task.dueDate && (
+                            <p
+                              className="text-sm mt-1"
+                              style={{
+                                color:
+                                  "var(--text-muted)",
+                              }}
+                            >
+                              Due{" "}
+                              {new Date(
+                                task.dueDate
+                              ).toLocaleDateString()}
+                            </p>
+                          )}
                         </div>
 
                         <Button
@@ -584,8 +681,8 @@ export default function TentPage() {
                         >
                           {task.status ===
                           "DONE"
-                            ? "Undo"
-                            : "Done"}
+                            ? "☑ Done"
+                            : "☐ Done"}
                         </Button>
                       </div>
                     </Card>
@@ -608,8 +705,17 @@ export default function TentPage() {
                   <Card
                     key={entry.id}
                   >
-                    <p className="font-medium">
-                      {entry.type}
+                    <p className="font-medium text-sm">
+                      {entry.type ===
+                      "WATERING"
+                        ? "💧 WATERING"
+                        : entry.type ===
+                          "FEEDING"
+                        ? "🧪 FEEDING"
+                        : entry.type ===
+                          "NOTE"
+                        ? "📝 NOTE"
+                        : "⚠ ISSUE"}
                     </p>
 
                     <p className="text-sm">
