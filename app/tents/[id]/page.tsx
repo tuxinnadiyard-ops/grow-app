@@ -31,6 +31,13 @@ type Observation = {
   createdAt: string;
 };
 
+type Photo = {
+  id: string;
+  url: string;
+  note?: string;
+  createdAt: string;
+};
+
 type Task = {
   id: string;
   title: string;
@@ -48,6 +55,7 @@ type Run = {
   journalEntries: JournalEntry[];
   observations: Observation[];
   tasks: Task[];
+  photos: Photo[];
 };
 
 type Tent = {
@@ -100,6 +108,12 @@ export default function TentPage() {
     taskDueDate,
     setTaskDueDate,
   ] = useState("");
+
+  const [photoFile, setPhotoFile] =
+    useState<File | null>(null);
+
+  const [photoNote, setPhotoNote] =
+    useState("");
 
   async function loadTent() {
     const res =
@@ -277,6 +291,39 @@ export default function TentPage() {
     await loadTent();
   }
 
+  async function uploadPhoto() {
+    const activeRun =
+      tent?.runs.find(
+        (r) => r.isActive
+      );
+
+    if (!activeRun || !photoFile) {
+      alert("Select a photo");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("runId", activeRun.id);
+    formData.append("note", photoNote);
+    formData.append("photo", photoFile);
+
+    const res = await fetch("/api/photos", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error ?? "Upload failed");
+      return;
+    }
+
+    setPhotoFile(null);
+    setPhotoNote("");
+    await loadTent();
+  }
+
   async function toggleTask(
     taskId: string
   ) {
@@ -378,7 +425,7 @@ export default function TentPage() {
             {!activeRun ? (
               <p>No active run</p>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <Button
                   onClick={() =>
                     quickJournalEntry(
@@ -476,71 +523,19 @@ export default function TentPage() {
             {!activeRun ||
             activeRun.observations.length ===
               0 ? (
-              <p
-                style={{
-                  color:
-                    "var(--text-muted)",
-                }}
-              >
-                No observations yet
-              </p>
+              <p>No observations yet</p>
             ) : (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-2xl font-semibold">
-                    Health{" "}
-                    {
-                      activeRun
-                        .observations[0]
-                        .healthScore
-                    }
-                    /5
-                  </p>
-
-                  <p
-                    className="text-sm mt-1"
-                    style={{
-                      color:
-                        "var(--text-muted)",
-                    }}
-                  >
-                    {activeRun.observations[0]
-                      .healthScore >= 4
-                      ? "🟢 Healthy"
-                      : activeRun.observations[0]
-                          .healthScore >= 3
-                      ? "🟡 Watch"
-                      : "🔴 Stress"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Card>
-                    V{
-                      activeRun.observations[0]
-                        .vigour
-                    }/5
-                  </Card>
-                  <Card>
-                    L{
-                      activeRun.observations[0]
-                        .leafColor
-                    }/5
-                  </Card>
-                  <Card>
-                    S{
-                      activeRun.observations[0]
-                        .stressLevel
-                    }/5
-                  </Card>
-                  <Card>
-                    G{
-                      activeRun.observations[0]
-                        .growthSpeed
-                    }/5
-                  </Card>
-                </div>
-              </div>
+              <>
+                <p className="text-2xl font-semibold">
+                  Health{" "}
+                  {
+                    activeRun
+                      .observations[0]
+                      .healthScore
+                  }
+                  /5
+                </p>
+              </>
             )}
           </Card>
 
@@ -559,34 +554,85 @@ export default function TentPage() {
                       observation.id
                     }
                   >
-                    <div>
-                      <p className="font-medium">
-                        Health {
-                          observation.healthScore
-                        }/5
-                      </p>
-                      <p
-                        className="text-sm mt-1"
-                        style={{
-                          color:
-                            "var(--text-muted)",
-                        }}
-                      >
-                        V{
-                          observation.vigour
-                        } • L{
-                          observation.leafColor
-                        } • S{
-                          observation.stressLevel
-                        } • G{
-                          observation.growthSpeed
-                        }
-                      </p>
-                    </div>
+                    Health{" "}
+                    {
+                      observation.healthScore
+                    }
+                    /5
                   </Card>
                 )
               )}
             </div>
+          </Card>
+
+
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">
+              Photos
+            </h2>
+
+            {!activeRun ? (
+              <p>No active run</p>
+            ) : (
+              <div className="space-y-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setPhotoFile(
+                      e.target.files?.[0] ??
+                        null
+                    )
+                  }
+                />
+
+                <textarea
+                  rows={2}
+                  placeholder="Optional photo note"
+                  value={photoNote}
+                  onChange={(e) =>
+                    setPhotoNote(
+                      e.target.value
+                    )
+                  }
+                />
+
+                <Button
+                  onClick={uploadPhoto}
+                >
+                  Add Photo
+                </Button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {activeRun.photos?.map(
+                    (photo) => (
+                      <Card
+                        key={photo.id}
+                      >
+                        <img
+                          src={photo.url}
+                          alt="Grow photo"
+                          className="rounded-xl mb-2 w-full object-cover"
+                        />
+
+                        <p className="text-xs"
+                          style={{
+                            color:"var(--text-muted)",
+                          }}>
+                          {new Date(photo.createdAt).toLocaleString()}
+                        </p>
+
+                        {photo.note && (
+                          <p className="text-sm mt-2">
+                            {photo.note}
+                          </p>
+                        )}
+                      </Card>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
 
           <Card>
@@ -639,37 +685,11 @@ export default function TentPage() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p
-                            className={
-                              task.status ===
-                              "DONE"
-                                ? "line-through opacity-60"
-                                : ""
-                            }
-                          >
-                            {task.status ===
-                            "DONE"
-                              ? "☑ "
-                              : "☐ "}
+                          <p>
                             {
                               task.title
                             }
                           </p>
-
-                          {task.dueDate && (
-                            <p
-                              className="text-sm mt-1"
-                              style={{
-                                color:
-                                  "var(--text-muted)",
-                              }}
-                            >
-                              Due{" "}
-                              {new Date(
-                                task.dueDate
-                              ).toLocaleDateString()}
-                            </p>
-                          )}
                         </div>
 
                         <Button
@@ -681,8 +701,8 @@ export default function TentPage() {
                         >
                           {task.status ===
                           "DONE"
-                            ? "☑ Done"
-                            : "☐ Done"}
+                            ? "Undo"
+                            : "Done"}
                         </Button>
                       </div>
                     </Card>
@@ -705,17 +725,8 @@ export default function TentPage() {
                   <Card
                     key={entry.id}
                   >
-                    <p className="font-medium text-sm">
-                      {entry.type ===
-                      "WATERING"
-                        ? "💧 WATERING"
-                        : entry.type ===
-                          "FEEDING"
-                        ? "🧪 FEEDING"
-                        : entry.type ===
-                          "NOTE"
-                        ? "📝 NOTE"
-                        : "⚠ ISSUE"}
+                    <p className="font-medium">
+                      {entry.type}
                     </p>
 
                     <p className="text-sm">
