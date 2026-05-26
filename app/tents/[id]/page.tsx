@@ -73,6 +73,16 @@ type Tent = {
   timeline?: TimelineEvent[];
 };
 
+type Environment = {
+  temperature: number;
+  humidity: number;
+  vpd: number;
+  soilMoisture: number;
+  co2: number;
+  lightsOn: boolean;
+  updatedAt: string;
+};
+
 export default function TentPage() {
   const params =
     useParams();
@@ -84,6 +94,13 @@ export default function TentPage() {
     useState<Tent | null>(
       null
     );
+
+  const [
+    environment,
+    setEnvironment,
+  ] = useState<Environment | null>(
+    null
+  );
 
   const [vigour, setVigour] =
     useState(3);
@@ -122,6 +139,18 @@ export default function TentPage() {
 
   const [photoNote, setPhotoNote] =
     useState("");
+
+  async function loadEnvironment() {
+    const res =
+      await fetch(
+        `/api/environment/${tentId}`
+      );
+
+    const data =
+      await res.json();
+
+    setEnvironment(data);
+  }
 
   async function loadTent() {
     const res =
@@ -368,6 +397,7 @@ export default function TentPage() {
   useEffect(() => {
     if (tentId) {
       loadTent();
+      loadEnvironment();
     }
   }, [tentId]);
 
@@ -418,11 +448,75 @@ export default function TentPage() {
               Quick Status
             </h2>
 
-            <div className="grid grid-cols-3 gap-4">
-              <Card>24°C</Card>
-              <Card>RH 58%</Card>
-              <Card>Lights ON</Card>
-            </div>
+            {!environment ? (
+              <p
+                style={{
+                  color:
+                    "var(--text-muted)",
+                }}
+              >
+                Loading environment...
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <Card>
+                    🌡{" "}
+                    {environment.temperature.toFixed(
+                      1
+                    )}
+                    °C
+                  </Card>
+
+                  <Card>
+                    💧 RH{" "}
+                    {
+                      environment.humidity
+                    }
+                    %
+                  </Card>
+
+                  <Card>
+                    🍃 VPD{" "}
+                    {environment.vpd.toFixed(
+                      1
+                    )}
+                  </Card>
+
+                  <Card>
+                    🌱 Soil{" "}
+                    {
+                      environment.soilMoisture
+                    }
+                    %
+                  </Card>
+
+                  <Card>
+                    🫧 CO₂{" "}
+                    {environment.co2}
+                  </Card>
+
+                  <Card>
+                    {environment.lightsOn
+                      ? "💡 Lights ON"
+                      : "🌙 Lights OFF"}
+                  </Card>
+                </div>
+
+                <p
+                  className="text-xs mt-4"
+                  style={{
+                    color:
+                      "var(--text-muted)",
+                  }}
+                >
+                  Updated{" "}
+                  {new Date(
+                    environment.updatedAt
+                  ).toLocaleTimeString()}
+                </p>
+              </>
+            )}
           </Card>
 
           <Card>
