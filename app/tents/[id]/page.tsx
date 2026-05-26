@@ -31,6 +31,14 @@ type Observation = {
   createdAt: string;
 };
 
+type Insight = {
+  id: string;
+  severity: "info" | "warning" | "positive";
+  title: string;
+  description?: string;
+  createdAt: string;
+};
+
 type Photo = {
   id: string;
   url: string;
@@ -73,16 +81,6 @@ type Tent = {
   timeline?: TimelineEvent[];
 };
 
-type Environment = {
-  temperature: number;
-  humidity: number;
-  vpd: number;
-  soilMoisture: number;
-  co2: number;
-  lightsOn: boolean;
-  updatedAt: string;
-};
-
 export default function TentPage() {
   const params =
     useParams();
@@ -95,13 +93,8 @@ export default function TentPage() {
       null
     );
 
-  const [
-    environment,
-    setEnvironment,
-  ] = useState<Environment | null>(
-    null
-  );
-
+  const [healthScore, setHealthScore] = useState(3);
+  
   const [vigour, setVigour] =
     useState(3);
 
@@ -140,17 +133,8 @@ export default function TentPage() {
   const [photoNote, setPhotoNote] =
     useState("");
 
-  async function loadEnvironment() {
-    const res =
-      await fetch(
-        `/api/environment/${tentId}`
-      );
-
-    const data =
-      await res.json();
-
-    setEnvironment(data);
-  }
+  const [insights, setInsights] =
+    useState<Insight[]>([]);
 
   async function loadTent() {
     const res =
@@ -162,6 +146,16 @@ export default function TentPage() {
       await res.json();
 
     setTent(data);
+
+    const insightsRes =
+      await fetch(
+        `/api/insights/${tentId}`
+      );
+
+    const insightsData =
+      await insightsRes.json();
+
+    setInsights(insightsData);
   }
 
   async function quickJournalEntry(
@@ -240,6 +234,7 @@ export default function TentPage() {
             JSON.stringify({
               runId:
                 activeRun.id,
+              healthScore,
               vigour,
               leafColor,
               stressLevel,
@@ -397,7 +392,6 @@ export default function TentPage() {
   useEffect(() => {
     if (tentId) {
       loadTent();
-      loadEnvironment();
     }
   }, [tentId]);
 
@@ -445,78 +439,80 @@ export default function TentPage() {
 
           <Card>
             <h2 className="text-xl font-semibold mb-4">
-              Quick Status
+              Insights
             </h2>
 
-            {!environment ? (
-              <p
-                style={{
-                  color:
-                    "var(--text-muted)",
-                }}
-              >
-                Loading environment...
-              </p>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <Card>
-                    🌡{" "}
-                    {environment.temperature.toFixed(
-                      1
-                    )}
-                    °C
-                  </Card>
-
-                  <Card>
-                    💧 RH{" "}
-                    {
-                      environment.humidity
-                    }
-                    %
-                  </Card>
-
-                  <Card>
-                    🍃 VPD{" "}
-                    {environment.vpd.toFixed(
-                      1
-                    )}
-                  </Card>
-
-                  <Card>
-                    🌱 Soil{" "}
-                    {
-                      environment.soilMoisture
-                    }
-                    %
-                  </Card>
-
-                  <Card>
-                    🫧 CO₂{" "}
-                    {environment.co2}
-                  </Card>
-
-                  <Card>
-                    {environment.lightsOn
-                      ? "💡 Lights ON"
-                      : "🌙 Lights OFF"}
-                  </Card>
-                </div>
-
+            <div className="space-y-3">
+              {insights.length ===
+              0 ? (
                 <p
-                  className="text-xs mt-4"
                   style={{
                     color:
                       "var(--text-muted)",
                   }}
                 >
-                  Updated{" "}
-                  {new Date(
-                    environment.updatedAt
-                  ).toLocaleTimeString()}
+                  No insights yet
                 </p>
-              </>
-            )}
+              ) : (
+                insights.map(
+                  (
+                    insight
+                  ) => (
+                    <Card
+                      key={
+                        insight.id
+                      }
+                    >
+                      <div className="flex gap-3">
+                        <div>
+                          {insight.severity ===
+                          "positive"
+                            ? "🟢"
+                            : insight.severity ===
+                              "warning"
+                            ? "⚠️"
+                            : "📷"}
+                        </div>
+
+                        <div>
+                          <p className="font-medium">
+                            {
+                              insight.title
+                            }
+                          </p>
+
+                          {insight.description && (
+                            <p
+                              className="text-sm mt-1"
+                              style={{
+                                color:
+                                  "var(--text-muted)",
+                              }}
+                            >
+                              {
+                                insight.description
+                              }
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  )
+                )
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">
+              Quick Status
+            </h2>
+
+            <div className="grid grid-cols-3 gap-4">
+              <Card>24°C</Card>
+              <Card>RH 58%</Card>
+              <Card>Lights ON</Card>
+            </div>
           </Card>
 
           <Card>
@@ -583,30 +579,112 @@ export default function TentPage() {
               <p>No active run</p>
             ) : (
               <div className="space-y-4">
-                <select value={vigour} onChange={(e)=>setVigour(Number(e.target.value))}>
-                  {[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}
-                </select>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text">
+                    Health Score
+                  </label>
 
-                <select value={leafColor} onChange={(e)=>setLeafColor(Number(e.target.value))}>
-                  {[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}
-                </select>
+                  <select
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
+                    value={healthScore}
+                    onChange={(e) =>
+                      setHealthScore(Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text">
+                    Vigour
+                  </label>
 
-                <select value={stressLevel} onChange={(e)=>setStressLevel(Number(e.target.value))}>
-                  {[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}
-                </select>
+                  <select
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
+                    value={vigour}
+                    onChange={(e) =>
+                      setVigour(Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <select value={growthSpeed} onChange={(e)=>setGrowthSpeed(Number(e.target.value))}>
-                  {[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}
-                </select>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text">
+                    Leaf Color
+                  </label>
+
+                  <select
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
+                    value={leafColor}
+                    onChange={(e) =>
+                      setLeafColor(Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text">
+                    Stress Level
+                  </label>
+
+                  <select
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
+                    value={stressLevel}
+                    onChange={(e) =>
+                      setStressLevel(Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text">
+                    Growth Speed
+                  </label>
+
+                  <select
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
+                    value={growthSpeed}
+                    onChange={(e) =>
+                      setGrowthSpeed(Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <textarea
                   rows={3}
                   placeholder="Observation notes..."
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text placeholder:text-muted"
                   value={note}
-                  onChange={(e)=>
-                    setNote(
-                      e.target.value
-                    )
+                  onChange={(e) =>
+                    setNote(e.target.value)
                   }
                 />
 
