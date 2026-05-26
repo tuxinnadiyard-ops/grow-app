@@ -112,6 +112,12 @@ export async function GET(
                       createdAt: "desc",
                     },
                   },
+                photos: {
+                  orderBy: {
+                    createdAt:
+                      "desc",
+                  },
+                },
               },
             },
           },
