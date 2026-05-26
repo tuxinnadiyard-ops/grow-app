@@ -4,12 +4,16 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 
 import AppShell from "@/components/layout/AppShell";
 import Container from "@/components/ui/Container";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+
 
 type JournalEntry = {
   id: string;
@@ -84,6 +88,9 @@ type Tent = {
 export default function TentPage() {
   const params =
     useParams();
+
+  const router =
+    useRouter();
 
   const tentId =
     params.id as string;
@@ -407,6 +414,55 @@ export default function TentPage() {
     await loadTent();
   }
 
+  async function changeStage(
+    stage: string
+  ) {
+    const activeRun =
+      tent?.runs.find(
+        (r) => r.isActive
+      );
+
+    if (!activeRun) {
+      alert(
+        "No active run"
+      );
+      return;
+    }
+
+    const res =
+      await fetch(
+        "/api/runs/stage",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body:
+            JSON.stringify({
+              runId:
+                activeRun.id,
+              stage,
+            }),
+        }
+      );
+
+    const data =
+      await res.json();
+
+    if (!res.ok) {
+      alert(
+        data.error ??
+          "Failed to change stage"
+      );
+      return;
+    }
+
+    await loadTent();
+  }
+
   useEffect(() => {
     if (tentId) {
       loadTent();
@@ -606,26 +662,90 @@ export default function TentPage() {
     <AppShell>
       <Container>
         <div className="space-y-8">
-          <div>
-            <h1 className="text-3xl font-semibold">
-              {tent.name}
-            </h1>
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-3xl font-semibold">
+                {tent.name}
+              </h1>
+
+              {activeRun && (
+                <p
+                  style={{
+                    color:
+                      "var(--text-muted)",
+                  }}
+                >
+                  {
+                    activeRun.strain
+                  }
+                  {" · "}
+                  {
+                    activeRun.stage
+                  }
+                </p>
+              )}
+            </div>
 
             {activeRun && (
-              <p
-                style={{
-                  color:
-                    "var(--text-muted)",
-                }}
-              >
-                {
-                  activeRun.strain
-                }
-                {" · "}
-                {
-                  activeRun.stage
-                }
-              </p>
+              <Card>
+                <div className="space-y-3">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      Change Stage
+                    </h2>
+
+                    <p
+                      className="text-sm"
+                      style={{
+                        color:
+                          "var(--text-muted)",
+                      }}
+                    >
+                      Update the
+                      cultivation stage
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {[
+                      "VEG",
+                      "FLOWER",
+                      "DRY",
+                      "CURE",
+                    ].map(
+                      (stage) => (
+                        <Button
+                          key={stage}
+                          onClick={() =>
+                            changeStage(
+                              stage
+                            )
+                          }
+                          variant={
+                            activeRun.stage ===
+                            stage
+                              ? "primary"
+                              : "secondary"
+                          }
+                        >
+                          {stage}
+                        </Button>
+                      )
+                    )}
+                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      router.push(
+                        `/runs/${activeRun.id}`
+                      )
+                    }
+                  >
+                    Run Details
+                  </Button>
+
+                </div>
+              </Card>
             )}
           </div>
 
