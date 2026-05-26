@@ -124,8 +124,74 @@ export async function GET(
         }
       );
 
+    const timeline =
+      tent?.runs.flatMap(
+        (run) => [
+          ...run.journalEntries.map((entry) => ({
+            id: entry.id,
+            type: "JOURNAL",
+            createdAt: entry.createdAt,
+            title:
+              entry.type === "WATERING"
+                ? "💧 Watering"
+                : entry.type === "FEEDING"
+                ? "🧪 Feeding"
+                : entry.type === "NOTE"
+                ? "📝 Note"
+                : "⚠ Issue",
+            subtitle:
+              entry.note,
+          })),
+          ...run.observations.map((obs) => ({
+            id: obs.id,
+            type: "OBSERVATION",
+            createdAt:
+              obs.createdAt,
+            title: `🟢 Health ${obs.healthScore}/5`,
+            subtitle: `V${obs.vigour} • L${obs.leafColor} • S${obs.stressLevel} • G${obs.growthSpeed}`,
+          })),
+          ...run.photos.map((photo) => ({
+            id: photo.id,
+            type: "PHOTO",
+            createdAt:
+              photo.createdAt,
+            title:
+              "📷 Photo",
+            subtitle:
+              photo.note ??
+              "Grow photo",
+          })),
+          ...run.tasks.map((task) => ({
+            id: task.id,
+            type: "TASK",
+            createdAt:
+              task.createdAt,
+            title:
+              task.status ===
+              "DONE"
+                ? `☑ ${task.title}`
+                : `☐ ${task.title}`,
+            subtitle:
+              task.dueDate
+                ? `Due ${new Date(task.dueDate).toLocaleDateString()}`
+                : undefined,
+          })),
+        ]
+      ).sort(
+        (a, b) =>
+          new Date(
+            b.createdAt
+          ).getTime() -
+          new Date(
+            a.createdAt
+          ).getTime()
+      ) ?? [];
+
     return NextResponse.json(
-      tent
+      {
+        ...tent,
+        timeline,
+      }
     );
   } catch (error) {
     console.error(

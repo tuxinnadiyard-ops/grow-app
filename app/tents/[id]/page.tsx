@@ -58,11 +58,19 @@ type Run = {
   photos: Photo[];
 };
 
+type TimelineEvent = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  createdAt: string;
+};
+
 type Tent = {
   id: string;
   name: string;
   surfaceM2?: number;
   runs: Run[];
+  timeline?: TimelineEvent[];
 };
 
 export default function TentPage() {
@@ -710,6 +718,72 @@ export default function TentPage() {
                 )}
               </div>
             )}
+          </Card>
+
+
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">
+              Timeline Intelligence
+            </h2>
+
+            <div className="space-y-2">
+              {tent.timeline?.length === 0 ? (
+                <p
+                  style={{
+                    color:
+                      "var(--text-muted)",
+                  }}
+                >
+                  No timeline events
+                </p>
+              ) : (
+                tent.timeline?.map(
+                  (event) => (
+                    <Card
+                      key={
+                        event.id
+                      }
+                    >
+                      <div className="flex justify-between items-start gap-3">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {
+                              event.title
+                            }
+                          </p>
+
+                          {event.subtitle && (
+                            <p
+                              className="text-xs mt-1"
+                              style={{
+                                color:
+                                  "var(--text-muted)",
+                              }}
+                            >
+                              {
+                                event.subtitle
+                              }
+                            </p>
+                          )}
+                        </div>
+
+                        <p
+                          className="text-xs"
+                          style={{
+                            color:
+                              "var(--text-muted)",
+                          }}
+                        >
+                          {new Date(
+                            event.createdAt
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </Card>
+                  )
+                )
+              )}
+            </div>
           </Card>
 
           <Card>
