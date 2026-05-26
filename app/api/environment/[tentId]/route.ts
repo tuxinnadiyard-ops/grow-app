@@ -1,29 +1,40 @@
-import {
-  NextResponse,
-} from "next/server";
-
-import { getEnvironment }
-  from "@/lib/providers/environment";
-
-type Params = {
-  params: Promise<{
-    tentId: string;
-  }>;
-};
+import { NextRequest, NextResponse } from "next/server";
+import { getFakeEnvironment } from "@/lib/fake-monitoring";
 
 export async function GET(
-  _request: Request,
-  { params }: Params
+  request: NextRequest,
+  context: {
+    params: Promise<{
+      tentId: string;
+    }>;
+  }
 ) {
-  const { tentId } =
-    await params;
+  try {
+    const { tentId } =
+      await context.params;
 
-  const data =
-    await getEnvironment(
-      tentId
+    const environment =
+      getFakeEnvironment(tentId);
+
+    return NextResponse.json(
+      environment
+    );
+  } catch (error) {
+    console.error(
+      "Environment API error:",
+      error
     );
 
-  return NextResponse.json(
-    data
-  );
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to load environment",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }

@@ -136,6 +136,13 @@ export default function TentPage() {
   const [insights, setInsights] =
     useState<Insight[]>([]);
 
+  const [environment, setEnvironment] =
+    useState<{
+      temperature: number;
+      humidity: number;
+      lightOn: boolean;
+    } | null>(null);
+
   async function loadTent() {
     const res =
       await fetch(
@@ -395,6 +402,41 @@ export default function TentPage() {
     }
   }, [tentId]);
 
+
+  useEffect(() => {
+    async function loadEnvironment() {
+      try {
+        const response = await fetch(
+          `/api/environment/${params.id}`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to load environment"
+          );
+        }
+
+        const data =
+          await response.json();
+
+        setEnvironment(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadEnvironment();
+
+    const interval = setInterval(
+      loadEnvironment,
+      10000
+    );
+
+    return () =>
+      clearInterval(interval);
+  }, [params.id]);
+
+
   if (!tent) {
     return (
       <AppShell>
@@ -508,10 +550,44 @@ export default function TentPage() {
               Quick Status
             </h2>
 
-            <div className="grid grid-cols-3 gap-4">
-              <Card>24°C</Card>
-              <Card>RH 58%</Card>
-              <Card>Lights ON</Card>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <p className="text-sm text-muted">
+                  Temperature
+                </p>
+
+                <p className="mt-2 text-2xl font-semibold text-text">
+                  {environment
+                    ? `${environment.temperature}°C`
+                    : "--"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <p className="text-sm text-muted">
+                  Humidity
+                </p>
+
+                <p className="mt-2 text-2xl font-semibold text-text">
+                  {environment
+                    ? `RH ${environment.humidity}%`
+                    : "--"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <p className="text-sm text-muted">
+                  Light
+                </p>
+
+                <p className="mt-2 text-2xl font-semibold text-text">
+                  {environment
+                    ? environment.lightOn
+                      ? "ON"
+                      : "OFF"
+                    : "--"}
+                </p>
+              </div>
             </div>
           </Card>
 

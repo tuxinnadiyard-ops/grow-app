@@ -23,24 +23,116 @@ type Tent = {
   runs: Run[];
 };
 
+type Environment = {
+  temperature: number;
+  humidity: number;
+  lightOn: boolean;
+};
+
 export default function DashboardPage() {
   const [tents, setTents] =
     useState<Tent[]>([]);
 
+  const [
+    environments,
+    setEnvironments,
+  ] = useState<
+    Record<string, Environment>
+  >({});
+
   async function loadData() {
-    const res =
-      await fetch(
-        "/api/dashboard"
+    try {
+      /**
+       * Dashboard data
+       */
+      const res =
+        await fetch(
+          "/api/dashboard"
+        );
+
+      if (!res.ok) {
+        throw new Error(
+          "Failed to load dashboard"
+        );
+      }
+
+      const data =
+        await res.json();
+
+      setTents(data);
+
+      /**
+       * Fake monitoring
+       */
+      const envResults =
+        await Promise.all(
+          data.map(
+            async (
+              tent: Tent
+            ) => {
+              try {
+                const envRes =
+                  await fetch(
+                    `/api/environment/${tent.id}`
+                  );
+
+                if (
+                  !envRes.ok
+                ) {
+                  return null;
+                }
+
+                const env =
+                  await envRes.json();
+
+                return {
+                  tentId:
+                    tent.id,
+                  environment:
+                    env,
+                };
+              } catch {
+                return null;
+              }
+            }
+          )
+        );
+
+      const envMap: Record<
+        string,
+        Environment
+      > = {};
+
+      envResults.forEach(
+        (result) => {
+          if (
+            result
+          ) {
+            envMap[
+              result.tentId
+            ] =
+              result.environment;
+          }
+        }
       );
 
-    const data =
-      await res.json();
-
-    setTents(data);
+      setEnvironments(envMap);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   useEffect(() => {
     loadData();
+
+    const interval =
+      setInterval(
+        loadData,
+        10000
+      );
+
+    return () =>
+      clearInterval(interval);
   }, []);
 
   function getDayCount(
@@ -109,6 +201,11 @@ export default function DashboardPage() {
                   const activeRun =
                     tent.runs[0];
 
+                  const environment =
+                    environments[
+                      tent.id
+                    ];
+
                   return (
                     <Card
                       key={
@@ -175,15 +272,23 @@ export default function DashboardPage() {
 
                           <div className="grid grid-cols-3 gap-3">
                             <Card>
-                              24°C
+                              {environment
+                                ? `${environment.temperature}°C`
+                                : "--"}
                             </Card>
 
                             <Card>
-                              RH 58%
+                              {environment
+                                ? `RH ${environment.humidity}%`
+                                : "--"}
                             </Card>
 
                             <Card>
-                              Lights ON
+                              {environment
+                                ? environment.lightOn
+                                  ? "Lights ON"
+                                  : "Lights OFF"
+                                : "--"}
                             </Card>
                           </div>
                         </>
