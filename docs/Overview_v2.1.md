@@ -10,11 +10,11 @@ Objectifs :
 - clarifier les principes structurants du système
 - stabiliser les décisions fondamentales avant implémentation
 - guider les documents fonctionnels et techniques
-- réduire les incohérences entre UX, backend et roadmap
+- éviter les incohérences entre UX, backend et roadmap
 
-Cette version V2.1 introduit une évolution majeure :
+Cette version V2.1 formalise une évolution majeure :
 
-> le passage d’un écran tente “render-all” à un **Compact Tent Workspace** mobile-first.
+> le passage d’un écran tente “render-all” à un **Compact Tent Workspace** mobile-first, pensé pour un usage quotidien rapide et confortable.
 
 ---
 
@@ -49,13 +49,14 @@ Maximum insight
 Minimum friction
 ```
 
-Le système doit :
+Le produit doit :
 
 - réduire la charge cognitive
-- permettre une saisie ultra rapide
-- favoriser un usage quotidien
-- rester confortable sur mobile
-- produire des données utiles
+- favoriser un usage quotidien rapide
+- fonctionner confortablement sur mobile
+- réduire le scroll inutile
+- permettre des interactions rapides
+- produire des données réellement utiles
 
 Le produit doit être :
 
@@ -68,11 +69,14 @@ Le produit doit être :
 
 Éviter volontairement :
 
-- interfaces type ERP
-- surcharge visuelle
-- navigation profonde
-- dashboards anxiogènes
-- workflows lents
+```txt
+ERP UI
+admin dashboard feel
+monitoring overload
+deep navigation
+dense workflows
+visual clutter
+```
 
 ---
 
@@ -81,7 +85,7 @@ Le produit doit être :
 La V2 introduisait :
 
 ```txt
-Tent-centric
+Tent-centric workflow
 ```
 
 La V2.1 ajoute :
@@ -92,9 +96,9 @@ Compact Tent Workspace
 
 Objectif :
 
-> ouvrir une tente et pouvoir comprendre + agir sans scroll inconfortable.
+> ouvrir une tente, comprendre immédiatement la situation et agir rapidement sans friction.
 
-Le Tent Working Screen n’est plus :
+Le Tent Workspace n’est plus :
 
 ```txt
 render all sections
@@ -108,32 +112,220 @@ priority-based workspace
 
 ---
 
-# Fold‑First Philosophy
+# Core UX Principles
 
-Principe majeur V2.1 :
+La V2.1 introduit 6 principes structurants.
 
-> les actions quotidiennes critiques doivent être accessibles sans scroll.
+## 1. Fold‑First UX
 
-Objectifs UX :
+Principe :
+
+> les actions critiques doivent être accessibles sans scroll.
+
+Le workflow principal doit être visible :
 
 ```txt
-Understand in < 3 sec
-Act in < 15 sec
-0-scroll primary workflow
+above the fold
 ```
 
-Workflow cible :
+Objectifs :
 
 ```txt
-Open tent
-→ Understand
-→ Act
-→ Continue day
+Understand < 3 sec
+Act < 15 sec
+No mandatory scroll
+```
+
+---
+
+## 2. One Glance UX
+
+Principe :
+
+> l’état de la tente doit être compris en un regard.
+
+L’utilisateur ne doit pas devoir :
+
+```txt
+scanner plusieurs cards
+interpréter plusieurs métriques
+naviguer pour comprendre
+```
+
+Préférer :
+
+```txt
+hero information
+global state
+soft interpretation
+```
+
+Exemple :
+
+Bon :
+
+```txt
+Stable environment
+24°C · RH58%
+Lights ON
+```
+
+À éviter :
+
+```txt
+Temp 24.2
+Humidity 58
+Power 612
+VPD 1.03
+EC 1.4
+```
+
+---
+
+## 3. Progressive Disclosure
+
+Principe :
+
+> montrer seulement ce qui est utile maintenant.
+
+Le système doit :
+
+```txt
+show only what matters now
+reveal details on demand
+```
+
+Exemples :
+
+Observation :
+
+```txt
+Complete observation
+```
+
+→ ouvre une sheet.
+
+Tasks :
+
+```txt
+2 tasks due
+```
+
+→ ouvre Tasks.
+
+Environment :
+
+```txt
+See environment details
+```
+
+→ ouvre écran secondaire.
+
+---
+
+## 4. Tent‑Centric Workflow
+
+Workflow principal :
+
+```txt
+Dashboard
+→ Tent Workspace
+→ Action
+→ Save
+```
+
+Le run devient :
+
+```txt
+secondary workflow
+```
+
+Accessible via :
+
+```txt
+Run Details
+```
+
+---
+
+## 5. Contextual UX
+
+Tout ne doit pas être affiché en permanence.
+
+L’interface doit s’adapter au contexte réel :
+
+Exemples :
+
+```txt
+Observation missing
+2 tasks due
+Nothing actionable
+```
+
+L’utilisateur doit voir :
+
+```txt
+what matters today
+```
+
+et non :
+
+```txt
+everything always
+```
+
+---
+
+## 6. Low Friction Mobile
+
+Usage attendu :
+
+```txt
+phone in hand
+inside tent
+fast interaction
+```
+
+Priorités :
+
+```txt
+thumb friendly
+few taps
+fast feedback
+large targets
 ```
 
 ---
 
 # Tent Workspace Model
+
+Le Tent Workspace devient :
+
+> le cœur du produit.
+
+Structure officielle :
+
+```txt
+Tent Header
+
+Status Hero
+
+Quick Actions
+
+Today Panel (contextual)
+
+Workspace Switcher
+```
+
+Important :
+
+```txt
+Do not render all sections
+```
+
+---
+
+# Tiered Information Hierarchy
 
 ## Tier 1 — Always Visible
 
@@ -145,7 +337,20 @@ Status Hero
 Quick Actions
 ```
 
-Ces éléments constituent le cœur quotidien.
+Responsabilité :
+
+```txt
+Understand
+Act
+```
+
+Ces éléments doivent fonctionner :
+
+```txt
+without scroll
+```
+
+---
 
 ### Tent Header
 
@@ -166,11 +371,13 @@ Critical CBD
 FLOWER · Day 42
 ```
 
+---
+
 ### Status Hero
 
 Responsabilité :
 
-> comprendre immédiatement l’état.
+> comprendre l’état immédiatement.
 
 Contenu MVP :
 
@@ -184,17 +391,18 @@ Global state
 Exemple :
 
 ```txt
-24°C
-RH 58%
-Lights ON
 Stable environment
+24°C · RH58%
+Lights ON
 ```
 
-Temps cible :
+Lecture cible :
 
 ```txt
 < 3 sec
 ```
+
+---
 
 ### Quick Actions
 
@@ -207,54 +415,73 @@ MVP strict :
 + Issue
 ```
 
-Règle :
+Objectif :
 
 ```txt
-one tap access
-thumb friendly
+one tap logging
+```
+
+Temps cible :
+
+```txt
+< 15 sec
 ```
 
 ---
 
-## Tier 2 — Contextual / Adaptive
+## Tier 2 — Contextual
 
-Éléments visibles seulement si utiles.
+Visible seulement si utile.
 
-### Today Summary
+### Today Panel
 
-Bloc adaptatif.
+Le Today Panel remplace le concept précédent d’Adaptive Context.
+
+Objectif :
+
+> montrer ce qui mérite attention aujourd’hui.
 
 Exemples :
 
 ```txt
-2 tasks due
 Observation missing
-Last watering 09:12
+2 tasks due
+Last watering: 09:12
 ```
-
-Le bloc peut disparaître si :
-
-```txt
-No pending task
-Observation completed
-Nothing actionable
-```
-
-### Daily Observation
-
-Ne doit plus être affichée comme un gros formulaire.
 
 Pattern :
 
 ```txt
-Missing daily observation
+compact contextual card
+```
+
+Si rien n’est utile :
+
+```txt
+Everything looks good
+```
+
+ou disparition du panneau.
+
+---
+
+### Daily Observation
+
+La Daily Observation n’est plus une grosse section permanente.
+
+Pattern :
+
+```txt
+Observation missing
 [Complete check‑in]
 ```
 
-Ouvre :
+Action :
 
 ```txt
-bottom sheet / modal
+open sheet
+save
+close
 ```
 
 Objectif :
@@ -265,41 +492,106 @@ few seconds
 
 ---
 
-## Tier 3 — On‑Demand Workspace
+## Tier 3 — On Demand Workspace
 
-Accessible depuis un switch local.
-
-Pattern :
+L’information secondaire est accessible :
 
 ```txt
-Timeline | Tasks | Photos
+on demand
 ```
 
-L’utilisateur reste dans :
+via :
 
 ```txt
-Tent Workspace
+segmented pills switcher
 ```
 
-sans navigation profonde.
+Pattern officiel :
+
+```txt
+[Timeline] [Tasks] [Photos]
+```
+
+Objectifs :
+
+```txt
+reduce scroll
+maintain context
+progressive disclosure
+```
+
+---
 
 ### Timeline
 
-Historique journalier :
+Objectif :
 
 ```txt
-Today
-08:42 Watering
-14:22 Note
+review history quickly
 ```
+
+Toujours :
+
+```txt
+chronological
+grouped by day
+card-based
+```
+
+---
 
 ### Tasks
 
-Tent‑local only.
+Règle MVP :
+
+```txt
+tent-local only
+```
+
+---
 
 ### Photos
 
-Suivi visuel croissance.
+Règle MVP :
+
+```txt
+tent-local only
+```
+
+---
+
+# Collapsed Hero Behavior
+
+La V2.1 introduit :
+
+```txt
+collapsed sticky hero
+```
+
+Quand l’utilisateur scrolle :
+
+Avant :
+
+```txt
+Tent 1
+FLOWER · Day 42
+
+24°C RH58 Lights ON
+```
+
+Après :
+
+```txt
+Tent 1 · D42 · 24°C · RH58%
+```
+
+Objectif :
+
+```txt
+reduce fatigue
+maximize workspace
+maintain awareness
+```
 
 ---
 
@@ -311,6 +603,7 @@ Déplacées hors workflow principal :
 Environment
 Insights
 Advanced monitoring
+Analytics
 ```
 
 Accès :
@@ -340,9 +633,9 @@ User
         └── Run
             ├── JournalEntry
             ├── Observation
-            ├── Task
             ├── SensorSnapshot
             ├── Photo
+            ├── Task
             └── Harvest
 ```
 
@@ -353,68 +646,44 @@ Dashboard
 → Tent Workspace
 ```
 
-Le système charge implicitement :
+Chargement implicite :
 
 ```txt
 Tent
 → active run
 → quick status
+→ contextual state
 → timeline
 → tasks
 → photos
 ```
 
----
-
-# Navigation Philosophy
-
-Toujours optimiser :
+Principe :
 
 ```txt
-screen
-→ action
-```
-
-La V2.1 autorise :
-
-```txt
-screen
-→ local context switch
-```
-
-Exemple :
-
-```txt
-Timeline | Tasks | Photos
-```
-
-Mais éviter :
-
-```txt
-screen
-→ screen
-→ sub screen
-→ modal
+backend complexity
+frontend simplicity
 ```
 
 ---
 
-# Product Scope — MVP
+# Product Scope
 
 ## MVP IN
 
 ```txt
 ✓ auth
 ✓ dashboard
-✓ tent workspace
+✓ compact tent workspace
 ✓ status hero
 ✓ quick actions
+✓ today panel
 ✓ contextual observation
 ✓ timeline
 ✓ tasks
 ✓ photos
 ✓ fake monitoring provider
-✓ quick monitoring
+✓ quick status
 ✓ settings
 ```
 
@@ -426,9 +695,9 @@ screen
 ✗ dense monitoring dashboard
 ✗ recommendation engine
 ✗ irrigation automation
-✗ multi-user collaboration
 ✗ global task center
 ✗ global photo gallery
+✗ advanced insights
 ```
 
 ---
@@ -450,7 +719,7 @@ Temps cibles :
 ```txt
 Understand < 3 sec
 Action < 15 sec
-Primary workflow with no mandatory scroll
+No mandatory scroll
 ```
 
 ---
@@ -469,8 +738,8 @@ Si une feature :
 ```txt
 ajoute du scroll
 augmente les clics
-complexifie le workflow quotidien
-ralentit l’usage mobile
+ralentit le workflow
+augmente la charge cognitive
 ```
 
 alors :
