@@ -1,3 +1,14 @@
+/**
+ * @deprecated
+ *
+ * Use:
+ * className="btn-primary"
+ * className="btn-secondary"
+ * className="btn-danger"
+ *
+ * Legacy compatibility only.
+ */
+
 type Props = {
   children: React.ReactNode;
   onClick?: () => void;
@@ -14,31 +25,19 @@ export default function Button({
   type = "button",
   variant = "primary",
 }: Props) {
-  const background =
-    variant === "primary"
-      ? "var(--primary)"
-      : variant ===
-          "danger"
-        ? "var(--danger)"
-        : "var(--secondary)";
-
   return (
     <button
       type={type}
       onClick={onClick}
-      className="
-        w-full
-        sm:w-auto
-        rounded-2xl
-        px-5
-        py-3
-        font-medium
-        transition
-      "
-      style={{
-        background,
-        color: "#0f1412",
-      }}
+      className={
+        variant ===
+        "secondary"
+          ? "btn-secondary"
+          : variant ===
+              "danger"
+            ? "btn-danger"
+            : "btn-primary"
+      }
     >
       {children}
     </button>

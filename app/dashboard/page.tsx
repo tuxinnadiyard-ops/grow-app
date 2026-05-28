@@ -6,6 +6,8 @@ import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import Container from "@/components/ui/Container";
 
+import CreateTentModal from "@/components/tent/CreateTentModal";
+
 type Run = {
   id: string;
   strain: string;
@@ -356,6 +358,26 @@ export default function DashboardPage() {
             </section>
           ) : (
             <section className="card overflow-hidden">
+              <div className="relative">
+                <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-green-500/10 blur-[90px]" />
+
+                <div className="relative">
+                  <p className="mb-3 text-sm uppercase tracking-[0.18em] text-[var(--primary)]">
+                    Dashboard
+                  </p>
+
+                  <h1 className="text-4xl font-semibold tracking-tight">
+                    {greeting()} 👋
+                  </h1>
+
+                  <p className="mt-3 max-w-xl text-[var(--text-muted)]">
+                    Monitor your grow
+                    spaces, understand
+                    plant health, and act
+                    quickly.
+                  </p>
+                </div>
+              </div>
             </section>
           )}
 
@@ -657,101 +679,30 @@ export default function DashboardPage() {
             )}
           </section>
         </div>
-        {createTentOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-            onClick={() =>
-              setCreateTentOpen(
-                false
-              )
-            }
-          />
-
-          <div className="fixed inset-x-4 top-1/2 z-50 mx-auto w-full max-w-md -translate-y-1/2">
-            <div className="card relative rounded-[32px] p-6 shadow-2xl">
-              <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-4xl">
-                  🌱
-                </div>
-
-                <h2 className="text-3xl font-semibold">
-                  Create grow space
-                </h2>
-
-                <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  Add a new tent to
-                  your cultivation
-                  workspace
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium">
-                    Tent name
-                  </label>
-
-                  <input
-                    placeholder="Flower Tent"
-                    value={tentName}
-                    onChange={(e) =>
-                      setTentName(
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium">
-                    Surface (optional)
-                  </label>
-
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="1.2"
-                    value={surfaceM2}
-                    onChange={(e) =>
-                      setSurfaceM2(
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-3">
-                  <button
-                    className="btn-secondary flex-1"
-                    onClick={() =>
-                      setCreateTentOpen(
-                        false
-                      )
-                    }
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    className="btn-primary flex-1"
-                    onClick={
-                      createTent
-                    }
-                    disabled={
-                      creatingTent
-                    }
-                  >
-                    {creatingTent
-                      ? "Creating..."
-                      : "Create tent"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+        <CreateTentModal
+          open={createTentOpen}
+          tentName={tentName}
+          setTentName={
+            setTentName
+          }
+          surfaceM2={
+            surfaceM2
+          }
+          setSurfaceM2={
+            setSurfaceM2
+          }
+          creatingTent={
+            creatingTent
+          }
+          onClose={() =>
+            setCreateTentOpen(
+              false
+            )
+          }
+          onCreate={
+            createTent
+          }
+        />
       </Container>
     </AppShell>
   );

@@ -11,8 +11,6 @@ import {
 
 import AppShell from "@/components/layout/AppShell";
 import Container from "@/components/ui/Container";
-import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 
 type Run = {
   id: string;
