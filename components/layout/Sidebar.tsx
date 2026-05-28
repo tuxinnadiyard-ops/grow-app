@@ -10,6 +10,8 @@ import {
   useState,
 } from "react";
 
+import CreateTentModal from "@/components/tent/CreateTentModal";
+
 type Tent = {
   id: string;
   name: string;
@@ -24,6 +26,24 @@ export default function Sidebar() {
 
   const [tents, setTents] =
     useState<Tent[]>([]);
+
+  const [
+    createTentOpen,
+    setCreateTentOpen,
+  ] = useState(false);
+
+  const [tentName, setTentName] =
+    useState("");
+
+  const [
+    surfaceM2,
+    setSurfaceM2,
+  ] = useState("");
+
+  const [
+    creatingTent,
+    setCreatingTent,
+  ] = useState(false);
 
   const [
     mobileOpen,
@@ -57,6 +77,94 @@ export default function Sidebar() {
     router.push(
       "/login"
     );
+  }
+
+  async function createTent() {
+    if (!tentName.trim()) {
+      return;
+    }
+
+    try {
+      setCreatingTent(true);
+
+      let growSpaceId:
+        | string
+        | undefined;
+
+      // try to reuse an
+      // existing grow space
+      const growRes =
+        await fetch(
+          "/api/dashboard"
+        );
+
+      const growData =
+        await growRes.json();
+
+      growSpaceId =
+        growData?.[0]
+          ?.growSpaceId;
+
+      // first setup
+      if (!growSpaceId) {
+        const res =
+          await fetch(
+            "/api/grow-spaces",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                name:
+                  "My Grow Space",
+                description:
+                  "",
+              }),
+            }
+          );
+
+        const growSpace =
+          await res.json();
+
+        growSpaceId =
+          growSpace.id;
+      }
+
+      await fetch("/api/tents", {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          name: tentName,
+          surfaceM2:
+            surfaceM2
+              ? Number(
+                  surfaceM2
+                )
+              : null,
+          growSpaceId,
+        }),
+      });
+
+      setTentName("");
+      setSurfaceM2("");
+
+      setCreateTentOpen(
+        false
+      );
+
+      await loadTents();
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCreatingTent(false);
+    }
   }
 
   const NavItem = ({
@@ -183,61 +291,62 @@ export default function Sidebar() {
         </div>
 
         {/* navigation */}
-        <nav className="flex-1 space-y-2">
-          <NavItem
-            href="/dashboard"
-            label="Dashboard"
-          />
+        <nav className="flex flex-1 flex-col">
+          <div className="space-y-2">
+            <NavItem
+              href="/dashboard"
+              label="Dashboard"
+            />
 
-          <div className="pt-4">
+            <NavItem
+              href="/settings"
+              label="Settings"
+            />
+          </div>
+
+          <div className="mt-8 flex-1">
             <p className="mb-3 px-2 text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-              Tents
+              Grow Spaces
             </p>
 
             <div className="space-y-2">
               {tents.map(
                 (tent) => (
                   <NavItem
-                    key={
-                      tent.id
-                    }
+                    key={tent.id}
                     href={`/tents/${tent.id}`}
-                    label={
-                      tent.name
-                    }
+                    label={tent.name}
                   />
                 )
               )}
             </div>
-          </div>
 
-          <button
-            className="
-              mt-4
-              flex
-              min-h-[48px]
-              w-full
-              items-center
-              justify-center
-              rounded-2xl
-              border
-              border-dashed
-              border-[var(--border)]
-              bg-[var(--card)]
-              px-4
-              text-sm
-              transition
-              hover:border-[var(--primary)]
-            "
-          >
-            + Add Tent
-          </button>
-
-          <div className="pt-4">
-            <NavItem
-              href="/settings"
-              label="Settings"
-            />
+            <button
+              onClick={() =>
+                setCreateTentOpen(
+                  true
+                )
+              }
+              className="
+                mt-4
+                flex
+                min-h-[48px]
+                w-full
+                items-center
+                justify-center
+                rounded-2xl
+                border
+                border-dashed
+                border-[var(--border)]
+                bg-[var(--card)]
+                px-4
+                text-sm
+                transition
+                hover:border-[var(--primary)]
+              "
+            >
+              + Add Tent
+            </button>
           </div>
         </nav>
 
@@ -264,6 +373,30 @@ export default function Sidebar() {
           </button>
         </div>
       </aside>
+      <CreateTentModal
+        open={createTentOpen}
+        tentName={tentName}
+        setTentName={
+          setTentName
+        }
+        surfaceM2={
+          surfaceM2
+        }
+        setSurfaceM2={
+          setSurfaceM2
+        }
+        creatingTent={
+          creatingTent
+        }
+        onClose={() =>
+          setCreateTentOpen(
+            false
+          )
+        }
+        onCreate={
+          createTent
+        }
+      />
     </>
   );
 }
