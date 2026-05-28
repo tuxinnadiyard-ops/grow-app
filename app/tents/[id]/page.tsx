@@ -85,6 +85,75 @@ type Tent = {
   timeline?: TimelineEvent[];
 };
 
+function ObservationMetric({
+  label,
+  value,
+  setValue,
+}: {
+  label: string;
+  value: number;
+  setValue: (
+    value: number
+  ) => void;
+}) {
+  return (
+    <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-medium">
+            {label}
+          </p>
+        </div>
+
+        <div className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-sm font-medium">
+          {value}/5
+        </div>
+      </div>
+
+      <div className="mb-4 flex gap-2">
+        {[1, 2, 3, 4, 5].map(
+          (score) => (
+            <button
+              key={score}
+              type="button"
+              onClick={() =>
+                setValue(
+                  score
+                )
+              }
+              className={`
+                h-12
+                flex-1
+                rounded-2xl
+                transition
+                ${
+                  score <= value
+                    ? "bg-[var(--primary)] border border-green-500/20"
+                    : "bg-[var(--card)] border border-[var(--border)]"
+                }
+              `}
+            />
+          )
+        )}
+      </div>
+
+      <input
+        type="range"
+        min="1"
+        max="5"
+        value={value}
+        onChange={(e) =>
+          setValue(
+            Number(
+              e.target.value
+            )
+          )
+        }
+      />
+    </div>
+  );
+}
+
 export default function TentPage() {
   const params =
     useParams();
@@ -122,6 +191,11 @@ export default function TentPage() {
 
   const [note, setNote] =
     useState("");
+
+   const [
+    feedbackMessage,
+    setFeedbackMessage,
+  ] = useState("");
 
   const [taskTitle, setTaskTitle] =
     useState("");
@@ -284,6 +358,14 @@ export default function TentPage() {
 
     await loadTent();
 
+    setFeedbackMessage(
+      "✓ Observation saved"
+    );
+
+    setTimeout(() => {
+      setFeedbackMessage("");
+    }, 2500);
+
     alert(
       "Observation saved"
     );
@@ -346,6 +428,14 @@ export default function TentPage() {
     setTaskDueDate("");
 
     await loadTent();
+
+    setFeedbackMessage(
+      "✓ Task added"
+    );
+
+    setTimeout(() => {
+      setFeedbackMessage("");
+    }, 2500);
   }
 
   async function uploadPhoto() {
@@ -379,6 +469,14 @@ export default function TentPage() {
     setPhotoFile(null);
     setPhotoNote("");
     await loadTent();
+
+    setFeedbackMessage(
+      "✓ Photo added"
+    );
+
+    setTimeout(() => {
+      setFeedbackMessage("");
+    }, 2500);
   }
 
   async function toggleTask(
@@ -661,816 +759,714 @@ export default function TentPage() {
   return (
     <AppShell>
       <Container>
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-3xl font-semibold">
-                {tent.name}
-              </h1>
+        {!tent ? (
+          <div className="flex min-h-[40vh] items-center justify-center">
+            <p className="text-[var(--text-muted)]">
+              Loading tent...
+            </p>
+          </div>
+        ) : (
+          (() => {
+            const activeRun =
+              tent.runs.find(
+                (r) => r.isActive
+              );
 
-              {activeRun && (
-                <p
-                  style={{
-                    color:
-                      "var(--text-muted)",
-                  }}
-                >
-                  {
-                    activeRun.strain
-                  }
-                  {" · "}
-                  {
-                    activeRun.stage
-                  }
-                </p>
-              )}
-            </div>
+            const dayCount =
+              activeRun
+                ? Math.floor(
+                    (Date.now() -
+                      new Date(
+                        activeRun.startDate
+                      ).getTime()) /
+                      (
+                        1000 *
+                        60 *
+                        60 *
+                        24
+                      )
+                  ) + 1
+                : 0;
 
-            {activeRun && (
-              <Card>
-                <div className="space-y-3">
+            return (
+              <div className="space-y-8">
+                {feedbackMessage && (
+                  <div className="sticky top-4 z-40 flex justify-center">
+                    <div className="rounded-full border border-green-500/20 bg-green-500/10 px-5 py-3 text-sm text-green-300 shadow-xl backdrop-blur">
+                      {feedbackMessage}
+                    </div>
+                  </div>
+                )}
+                {/* HEADER */}
+                <section className="card overflow-hidden">
+                  <div className="relative">
+                    {/* glow */}
+                    <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-green-500/10 blur-[80px]" />
+
+                    <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <div className="mb-4 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                            Tent workspace
+                          </span>
+
+                          {activeRun && (
+                            <span className="rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1 text-xs font-medium text-green-300">
+                              Active run
+                            </span>
+                          )}
+                        </div>
+
+                        <h1 className="text-4xl font-semibold tracking-tight">
+                          {tent.name}
+                        </h1>
+
+                        {activeRun ? (
+                          <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+                              <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                Stage
+                              </p>
+
+                              <p className="mt-1 font-semibold">
+                                {activeRun.stage}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+                              <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                Day
+                              </p>
+
+                              <p className="mt-1 font-semibold">
+                                {dayCount}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+                              <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                Strain
+                              </p>
+
+                              <p className="mt-1 font-semibold">
+                                {activeRun.strain}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-8">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-3xl">
+                              🌱
+                            </div>
+
+                            <h3 className="text-xl font-semibold">
+                              Start your first run
+                            </h3>
+
+                            <p className="mt-3 max-w-md text-[var(--text-muted)]">
+                              Track observations,
+                              photos, tasks and
+                              cultivation progress
+                              from seed to harvest.
+                            </p>
+
+                            <button className="btn-primary mt-6">
+                              Start cultivation
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <button
+                          className="btn-secondary"
+                          onClick={() =>
+                            router.push(
+                              "/dashboard"
+                            )
+                          }
+                        >
+                          ← Dashboard
+                        </button>
+
+                        <button className="btn-primary">
+                          Manage run
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* QUICK STATUS */}
+                <section className="space-y-4">
                   <div>
-                    <h2 className="text-lg font-semibold">
-                      Change Stage
+                    <h2 className="text-xl font-semibold">
+                      Quick Status
                     </h2>
 
-                    <p
-                      className="text-sm"
-                      style={{
-                        color:
-                          "var(--text-muted)",
-                      }}
-                    >
-                      Update the
-                      cultivation stage
+                    <p className="text-sm text-[var(--text-muted)]">
+                      Understand the tent at
+                      a glance
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {[
-                      "VEG",
-                      "FLOWER",
-                      "DRY",
-                      "CURE",
-                    ].map(
-                      (stage) => (
-                        <Button
-                          key={stage}
-                          onClick={() =>
-                            changeStage(
-                              stage
-                            )
-                          }
-                          variant={
-                            activeRun.stage ===
-                            stage
-                              ? "primary"
-                              : "secondary"
-                          }
-                        >
-                          {stage}
-                        </Button>
-                      )
-                    )}
-                  </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      router.push(
-                        `/runs/${activeRun.id}`
-                      )
-                    }
-                  >
-                    Run Details
-                  </Button>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="card relative overflow-hidden">
+                      <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-blue-500/10 blur-[40px]" />
 
-                </div>
-              </Card>
-            )}
-          </div>
+                      <div className="relative">
+                        <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                          Temperature
+                        </p>
 
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Insights
-            </h2>
-
-            <div className="space-y-3">
-              {insights.length ===
-              0 ? (
-                <p
-                  style={{
-                    color:
-                      "var(--text-muted)",
-                  }}
-                >
-                  No insights yet
-                </p>
-              ) : (
-                insights.map(
-                  (
-                    insight
-                  ) => (
-                    <Card
-                      key={
-                        insight.id
-                      }
-                    >
-                      <div className="flex gap-3">
-                        <div>
-                          {insight.severity ===
-                          "positive"
-                            ? "🟢"
-                            : insight.severity ===
-                              "warning"
-                            ? "⚠️"
-                            : "📷"}
-                        </div>
-
-                        <div>
-                          <p className="font-medium">
-                            {
-                              insight.title
-                            }
+                        <div className="mt-4 flex items-end gap-2">
+                          <p className="text-4xl font-semibold">
+                            {environment
+                              ? environment.temperature
+                              : "--"}
                           </p>
 
-                          {insight.description && (
-                            <p
-                              className="text-sm mt-1"
-                              style={{
-                                color:
-                                  "var(--text-muted)",
-                              }}
-                            >
-                              {
-                                insight.description
-                              }
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  )
-                )
-              )}
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Quick Status
-            </h2>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-border bg-surface p-4">
-                <p className="text-sm text-muted">
-                  Temperature
-                </p>
-
-                <p className="mt-2 text-2xl font-semibold text-text">
-                  {environment
-                    ? `${environment.temperature}°C`
-                    : "--"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-surface p-4">
-                <p className="text-sm text-muted">
-                  Humidity
-                </p>
-
-                <p className="mt-2 text-2xl font-semibold text-text">
-                  {environment
-                    ? `RH ${environment.humidity}%`
-                    : "--"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-surface p-4">
-                <p className="text-sm text-muted">
-                  Light
-                </p>
-
-                <p className="mt-2 text-2xl font-semibold text-text">
-                  {environment
-                    ? environment.lightOn
-                      ? "ON"
-                      : "OFF"
-                    : "--"}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Quick Actions
-            </h2>
-
-            {!activeRun ? (
-              <p>No active run</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  onClick={() =>
-                    quickJournalEntry(
-                      "WATERING"
-                    )
-                  }
-                >
-                  Watering
-                </Button>
-
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    quickJournalEntry(
-                      "FEEDING"
-                    )
-                  }
-                >
-                  Feeding
-                </Button>
-
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    quickJournalEntry(
-                      "NOTE"
-                    )
-                  }
-                >
-                  Note
-                </Button>
-
-                <Button
-                  variant="danger"
-                  onClick={() =>
-                    quickJournalEntry(
-                      "ISSUE"
-                    )
-                  }
-                >
-                  Issue
-                </Button>
-              </div>
-            )}
-          </Card>
-
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Daily Observation
-            </h2>
-
-            {!activeRun ? (
-              <p>No active run</p>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-text">
-                    Health Score
-                  </label>
-
-                  <select
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
-                    value={healthScore}
-                    onChange={(e) =>
-                      setHealthScore(Number(e.target.value))
-                    }
-                  >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-text">
-                    Vigour
-                  </label>
-
-                  <select
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
-                    value={vigour}
-                    onChange={(e) =>
-                      setVigour(Number(e.target.value))
-                    }
-                  >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-text">
-                    Leaf Color
-                  </label>
-
-                  <select
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
-                    value={leafColor}
-                    onChange={(e) =>
-                      setLeafColor(Number(e.target.value))
-                    }
-                  >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-text">
-                    Stress Level
-                  </label>
-
-                  <select
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
-                    value={stressLevel}
-                    onChange={(e) =>
-                      setStressLevel(Number(e.target.value))
-                    }
-                  >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-text">
-                    Growth Speed
-                  </label>
-
-                  <select
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text"
-                    value={growthSpeed}
-                    onChange={(e) =>
-                      setGrowthSpeed(Number(e.target.value))
-                    }
-                  >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <textarea
-                  rows={3}
-                  placeholder="Observation notes..."
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-3 text-text placeholder:text-muted"
-                  value={note}
-                  onChange={(e) =>
-                    setNote(e.target.value)
-                  }
-                />
-
-                <Button onClick={saveObservation}>
-                  Save Observation
-                </Button>
-              </div>
-            )}
-          </Card>
-
-          <Card className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold">
-                Environment History
-              </h2>
-
-              <p
-                className="text-sm"
-                style={{
-                  color:
-                    "var(--text-muted)",
-                }}
-              >
-                Recent environment
-                snapshots
-              </p>
-            </div>
-
-            {snapshots.length ===
-            0 ? (
-              <p
-                style={{
-                  color:
-                    "var(--text-muted)",
-                }}
-              >
-                No environment data yet
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {snapshots.map(
-                (
-                  snapshot,
-                  index
-                ) => {
-                  const previous =
-                    snapshots[
-                      index + 1
-                    ];
-
-                  const tempTrend =
-                    getTrend(
-                      snapshot.temperature,
-                      previous?.temperature
-                    );
-
-                  const humidityTrend =
-                    getTrend(
-                      snapshot.humidity,
-                      previous?.humidity
-                    );
-
-                  return (
-                    <div
-                      key={
-                        snapshot.id
-                      }
-                      className="rounded-xl border p-4"
-                      style={{
-                        borderColor:
-                          "var(--border)",
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="font-medium">
-                            {
-                              snapshot.temperature
-                            }
-                            °C{" "}
-                            {
-                              tempTrend
-                            }
-                            {" · "}
-                            RH{" "}
-                            {
-                              snapshot.humidity
-                            }
-                            %{" "}
-                            {
-                              humidityTrend
-                            }
-                          </div>
-
-                          <div className="flex items-center gap-2 text-sm">
-                            <span
-                              className="rounded-full px-2 py-1"
-                              style={{
-                                background:
-                                  "var(--surface)",
-                              }}
-                            >
-                              {getStatusBadge(
-                                snapshot
-                              )}
-                            </span>
-
-                            <span
-                              style={{
-                                color:
-                                  "var(--text-muted)",
-                              }}
-                            >
-                              Lights{" "}
-                              {snapshot.lightOn
-                                ? "ON"
-                                : "OFF"}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div
-                          className="text-sm"
-                          style={{
-                            color:
-                              "var(--text-muted)",
-                          }}
-                        >
-                          {formatRelativeTime(
-                            snapshot.timestamp
-                          )}
+                          <span className="pb-1 text-[var(--text-muted)]">
+                            °C
+                          </span>
                         </div>
                       </div>
                     </div>
-                  );
-                }
-              )}
-              </div>
-            )}
-          </Card>
 
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Last Observation
-            </h2>
+                    <div className="card relative overflow-hidden">
+                      <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-cyan-500/10 blur-[40px]" />
 
-            {!activeRun ||
-            activeRun.observations.length ===
-              0 ? (
-              <p>No observations yet</p>
-            ) : (
-              <>
-                <p className="text-2xl font-semibold">
-                  Health{" "}
-                  {
-                    activeRun
-                      .observations[0]
-                      .healthScore
-                  }
-                  /5
-                </p>
-              </>
-            )}
-          </Card>
-
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Recent Observations
-            </h2>
-
-            <div className="space-y-3">
-              {activeRun?.observations.map(
-                (
-                  observation
-                ) => (
-                  <Card
-                    key={
-                      observation.id
-                    }
-                  >
-                    Health{" "}
-                    {
-                      observation.healthScore
-                    }
-                    /5
-                  </Card>
-                )
-              )}
-            </div>
-          </Card>
-
-
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Photos
-            </h2>
-
-            {!activeRun ? (
-              <p>No active run</p>
-            ) : (
-              <div className="space-y-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) =>
-                    setPhotoFile(
-                      e.target.files?.[0] ??
-                        null
-                    )
-                  }
-                />
-
-                <textarea
-                  rows={2}
-                  placeholder="Optional photo note"
-                  value={photoNote}
-                  onChange={(e) =>
-                    setPhotoNote(
-                      e.target.value
-                    )
-                  }
-                />
-
-                <Button
-                  onClick={uploadPhoto}
-                >
-                  Add Photo
-                </Button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  {activeRun.photos?.map(
-                    (photo) => (
-                      <Card
-                        key={photo.id}
-                      >
-                        <img
-                          src={photo.url}
-                          alt="Grow photo"
-                          className="rounded-xl mb-2 w-full object-cover"
-                        />
-
-                        <p className="text-xs"
-                          style={{
-                            color:"var(--text-muted)",
-                          }}>
-                          {new Date(photo.createdAt).toLocaleString()}
+                      <div className="relative">
+                        <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                          Humidity
                         </p>
 
-                        {photo.note && (
-                          <p className="text-sm mt-2">
-                            {photo.note}
+                        <div className="mt-4 flex items-end gap-2">
+                          <p className="text-4xl font-semibold">
+                            {environment
+                              ? environment.humidity
+                              : "--"}
                           </p>
-                        )}
-                      </Card>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-          </Card>
 
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Tasks
-            </h2>
+                          <span className="pb-1 text-[var(--text-muted)]">
+                            %
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-            {!activeRun ? (
-              <p>No active run</p>
-            ) : (
-              <div className="space-y-5">
-                <input
-                  placeholder="Task title"
-                  value={taskTitle}
-                  onChange={(e)=>
-                    setTaskTitle(
-                      e.target.value
-                    )
-                  }
-                />
+                    <div className="card relative overflow-hidden">
+                      <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-yellow-500/10 blur-[40px]" />
 
-                <textarea
-                  placeholder="Optional note"
-                  value={taskNote}
-                  onChange={(e)=>
-                    setTaskNote(
-                      e.target.value
-                    )
-                  }
-                />
+                      <div className="relative">
+                        <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                          Lighting
+                        </p>
 
-                <input
-                  type="date"
-                  value={taskDueDate}
-                  onChange={(e)=>
-                    setTaskDueDate(
-                      e.target.value
-                    )
-                  }
-                />
+                        <div className="mt-4 flex items-center gap-3">
+                          <div
+                            className={`h-3 w-3 rounded-full ${
+                              environment?.lightOn
+                                ? "bg-green-400"
+                                : "bg-neutral-500"
+                            }`}
+                          />
 
-                <Button onClick={createTask}>
-                  Add Task
-                </Button>
-
-                {activeRun.tasks.map(
-                  (task) => (
-                    <Card
-                      key={task.id}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p>
-                            {
-                              task.title
-                            }
+                          <p className="text-3xl font-semibold">
+                            {environment
+                              ? environment.lightOn
+                                ? "ON"
+                                : "OFF"
+                              : "--"}
                           </p>
                         </div>
-
-                        <Button
-                          onClick={() =>
-                            toggleTask(
-                              task.id
-                            )
-                          }
-                        >
-                          {task.status ===
-                          "DONE"
-                            ? "Undo"
-                            : "Done"}
-                        </Button>
                       </div>
-                    </Card>
-                  )
-                )}
-              </div>
-            )}
-          </Card>
+                    </div>
+                  </div>
+                </section>
 
+                {/* QUICK ACTIONS */}
+                <section className="space-y-4">
+                  <div>
+                    <h2 className="text-xl font-semibold">
+                      Quick Actions
+                    </h2>
 
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Timeline Intelligence
-            </h2>
+                    <p className="text-sm text-[var(--text-muted)]">
+                      Fast daily actions
+                    </p>
+                  </div>
 
-            <div className="space-y-2">
-              {tent.timeline?.length === 0 ? (
-                <p
-                  style={{
-                    color:
-                      "var(--text-muted)",
-                  }}
-                >
-                  No timeline events
-                </p>
-              ) : (
-                tent.timeline?.map(
-                  (event) => (
-                    <Card
-                      key={
-                        event.id
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <button
+                      className="btn-primary"
+                      onClick={() =>
+                        quickJournalEntry(
+                          "WATERING"
+                        )
                       }
                     >
-                      <div className="flex justify-between items-start gap-3">
-                        <div>
-                          <p className="font-medium text-sm">
-                            {
-                              event.title
-                            }
-                          </p>
+                      💧 Watering
+                    </button>
 
-                          {event.subtitle && (
-                            <p
-                              className="text-xs mt-1"
-                              style={{
-                                color:
-                                  "var(--text-muted)",
-                              }}
-                            >
-                              {
-                                event.subtitle
-                              }
-                            </p>
-                          )}
+                    <button
+                      className="btn-secondary"
+                      onClick={() =>
+                        quickJournalEntry(
+                          "FEEDING"
+                        )
+                      }
+                    >
+                      🌱 Feeding
+                    </button>
+
+                    <button
+                      className="btn-secondary"
+                      onClick={() =>
+                        quickJournalEntry(
+                          "NOTE"
+                        )
+                      }
+                    >
+                      📝 Note
+                    </button>
+
+                    <button
+                      className="btn-secondary"
+                      onClick={() =>
+                        quickJournalEntry(
+                          "ISSUE"
+                        )
+                      }
+                    >
+                      ⚠️ Issue
+                    </button>
+                  </div>
+                </section>
+
+                {/* DAILY OBSERVATION */}
+                <section className="card space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold">
+                      Daily Observation
+                    </h2>
+
+                    <p className="text-sm text-[var(--text-muted)]">
+                      Record plant health in
+                      under a minute
+                    </p>
+                  </div>
+
+                  {!activeRun ? (
+                    <p className="text-[var(--text-muted)]">
+                      No active run
+                    </p>
+                  ) : (
+                    <>
+                      <div className="space-y-5">
+                        <ObservationMetric
+                          label="Health Score"
+                          value={
+                            healthScore
+                          }
+                          setValue={
+                            setHealthScore
+                          }
+                        />
+
+                        <ObservationMetric
+                          label="Vigour"
+                          value={vigour}
+                          setValue={
+                            setVigour
+                          }
+                        />
+
+                        <ObservationMetric
+                          label="Leaf Color"
+                          value={
+                            leafColor
+                          }
+                          setValue={
+                            setLeafColor
+                          }
+                        />
+
+                        <ObservationMetric
+                          label="Stress Level"
+                          value={
+                            stressLevel
+                          }
+                          setValue={
+                            setStressLevel
+                          }
+                        />
+
+                        <ObservationMetric
+                          label="Growth Speed"
+                          value={
+                            growthSpeed
+                          }
+                          setValue={
+                            setGrowthSpeed
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">
+                          Daily note
+                        </label>
+
+                        <textarea
+                          rows={4}
+                          placeholder="Leaves look healthy, watering adjusted, humidity stable..."
+                          value={note}
+                          onChange={(e) =>
+                            setNote(
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+                      <button
+                        className="btn-primary w-full"
+                        onClick={
+                          saveObservation
+                        }
+                      >
+                        Save Observation
+                      </button>
+                    </>
+                  )}
+                </section>
+
+                {/* JOURNAL */}
+                <section className="card">
+                  <div className="mb-5">
+                    <h2 className="text-xl font-semibold">
+                      Journal Timeline
+                    </h2>
+
+                    <p className="text-sm text-[var(--text-muted)]">
+                      Recent grow activity
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {!activeRun
+                      ?.journalEntries
+                      ?.length ? (
+                      <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-3xl">
+                          📝
                         </div>
 
-                        <p
-                          className="text-xs"
-                          style={{
-                            color:
-                              "var(--text-muted)",
-                          }}
-                        >
-                          {new Date(
-                            event.createdAt
-                          ).toLocaleString()}
+                        <h3 className="text-lg font-semibold">
+                          No activity yet
+                        </h3>
+
+                        <p className="mx-auto mt-3 max-w-sm text-sm text-[var(--text-muted)]">
+                          Use quick actions above
+                          to log watering,
+                          feeding, notes or
+                          cultivation events.
                         </p>
                       </div>
-                    </Card>
-                  )
-                )
-              )}
-            </div>
-          </Card>
+                    ) : (
+                      activeRun.journalEntries.map(
+                        (entry) => {
+                          const icon =
+                            entry.type ===
+                            "WATERING"
+                              ? "💧"
+                              : entry.type ===
+                                  "FEEDING"
+                                ? "🌱"
+                                : entry.type ===
+                                    "ISSUE"
+                                  ? "⚠️"
+                                  : "📝";
 
-          <Card>
-            <h2 className="text-xl font-semibold mb-4">
-              Journal Timeline
-            </h2>
+                          return (
+                            <div
+                              key={entry.id}
+                              className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5 transition hover:border-green-500/20"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex gap-4">
+                                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--card)] text-xl">
+                                    {icon}
+                                  </div>
 
-            <div className="space-y-3">
-              {activeRun?.journalEntries.map(
-                (
-                  entry
-                ) => (
-                  <Card
-                    key={entry.id}
-                  >
-                    <p className="font-medium">
-                      {entry.type}
-                    </p>
+                                  <div>
+                                    <p className="font-semibold">
+                                      {entry.type
+                                        .toLowerCase()
+                                        .replace(
+                                          "_",
+                                          " "
+                                        )}
+                                    </p>
 
-                    <p className="text-sm">
-                      {new Date(
-                        entry.createdAt
-                      ).toLocaleString()}
-                    </p>
+                                    <p className="mt-1 text-xs text-[var(--text-muted)]">
+                                      {new Date(
+                                        entry.createdAt
+                                      ).toLocaleString()}
+                                    </p>
 
-                    {entry.note && (
-                      <p className="mt-2">
-                        {
-                          entry.note
+                                    {entry.note && (
+                                      <p className="mt-3 text-sm text-[var(--text-muted)]">
+                                        {
+                                          entry.note
+                                        }
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
                         }
-                      </p>
+                      )
                     )}
-                  </Card>
-                )
-              )}
-            </div>
-          </Card>
-        </div>
+                  </div>
+                </section>
+
+                {/* TASKS + PHOTOS */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <section className="card">
+                    <div className="mb-5">
+                      <h2 className="text-xl font-semibold">
+                        Tasks
+                      </h2>
+
+                      <p className="text-sm text-[var(--text-muted)]">
+                        Tent-local reminders
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <input
+                        placeholder="Task title"
+                        value={taskTitle}
+                        onChange={(e) =>
+                          setTaskTitle(
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <textarea
+                        placeholder="Optional note"
+                        value={taskNote}
+                        onChange={(e) =>
+                          setTaskNote(
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <input
+                        type="date"
+                        value={taskDueDate}
+                        onChange={(e) =>
+                          setTaskDueDate(
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <button
+                        className="btn-primary w-full"
+                        onClick={createTask}
+                      >
+                        Add Task
+                      </button>
+
+                      <div className="space-y-3">
+                        {activeRun?.tasks
+                          ?.length === 0 ? (
+                          <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-3xl">
+                              ✅
+                            </div>
+
+                            <h3 className="text-lg font-semibold">
+                              No tasks scheduled
+                            </h3>
+
+                            <p className="mx-auto mt-3 max-w-sm text-sm text-[var(--text-muted)]">
+                              Add reminders for
+                              watering, nutrients,
+                              pruning or other grow
+                              tasks.
+                            </p>
+                          </div>
+                        ) : (
+                          activeRun?.tasks.map(
+                          (task) => (
+                            <div
+                              key={task.id}
+                              className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex gap-4">
+                                  <button
+                                    className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                      task.status ===
+                                      "DONE"
+                                        ? "border-green-400 bg-green-400 text-black"
+                                        : "border-[var(--border)]"
+                                    }`}
+                                    onClick={() =>
+                                      toggleTask(
+                                        task.id
+                                      )
+                                    }
+                                  >
+                                    {task.status ===
+                                    "DONE"
+                                      ? "✓"
+                                      : ""}
+                                  </button>
+
+                                  <div>
+                                    <p
+                                      className={`font-medium ${
+                                        task.status ===
+                                        "DONE"
+                                          ? "line-through opacity-60"
+                                          : ""
+                                      }`}
+                                    >
+                                      {task.title}
+                                    </p>
+
+                                    {task.note && (
+                                      <p className="mt-2 text-sm text-[var(--text-muted)]">
+                                        {task.note}
+                                      </p>
+                                    )}
+
+                                    {task.dueDate && (
+                                      <p className="mt-3 text-xs text-[var(--text-muted)]">
+                                        Due{" "}
+                                        {new Date(
+                                          task.dueDate
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="card">
+                    <div className="mb-5">
+                      <h2 className="text-xl font-semibold">
+                        Photos
+                      </h2>
+
+                      <p className="text-sm text-[var(--text-muted)]">
+                        Visual grow history
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          setPhotoFile(
+                            e.target.files?.[0] ??
+                              null
+                          )
+                        }
+                      />
+
+                      <textarea
+                        rows={2}
+                        placeholder="Photo note"
+                        value={photoNote}
+                        onChange={(e) =>
+                          setPhotoNote(
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <button
+                        className="btn-primary w-full"
+                        onClick={uploadPhoto}
+                      >
+                        Add Photo
+                      </button>
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {activeRun?.photos
+                          ?.length === 0 ? (
+                          <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-3xl">
+                              📷
+                            </div>
+
+                            <h3 className="text-lg font-semibold">
+                              No photos yet
+                            </h3>
+
+                            <p className="mx-auto mt-3 max-w-sm text-sm text-[var(--text-muted)]">
+                              Document growth over
+                              time and build a visual
+                              cultivation history.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {activeRun?.photos?.map(
+                              (photo) => (
+                                <div
+                                  key={photo.id}
+                                  className="overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)]"
+                                >
+                                  <img
+                                    src={photo.url}
+                                    alt="Grow"
+                                    className="aspect-square w-full object-cover"
+                                  />
+
+                                  <div className="p-4">
+                                    <p className="text-xs text-[var(--text-muted)]">
+                                      {new Date(
+                                        photo.createdAt
+                                      ).toLocaleString()}
+                                    </p>
+
+                                    {photo.note && (
+                                      <p className="mt-3 text-sm">
+                                        {photo.note}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            );
+          })()
+        )}
       </Container>
     </AppShell>
   );
