@@ -235,6 +235,74 @@ export default function TentPage() {
         }[]
       >([]);
 
+    const [
+      startRunOpen,
+      setStartRunOpen,
+    ] = useState(false);
+
+    const [strain, setStrain] =
+      useState("");
+
+    const [
+      creatingRun,
+      setCreatingRun,
+    ] = useState(false);
+
+
+  async function startCultivation() {
+    if (!strain.trim()) {
+      return;
+    }
+
+    try {
+      setCreatingRun(true);
+
+      const res =
+        await fetch(
+          "/api/runs",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              tentId: tent?.id,
+              strain,
+            }),
+          }
+        );
+
+      if (!res.ok) {
+        throw new Error(
+          "Failed to create run"
+        );
+      }
+
+      setStrain("");
+
+      setStartRunOpen(
+        false
+      );
+
+      setFeedbackMessage(
+        "✓ Cultivation started"
+      );
+
+      setTimeout(() => {
+        setFeedbackMessage(
+          ""
+        );
+      }, 2500);
+
+      await loadTent();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCreatingRun(false);
+    }
+  }
+
   async function loadTent() {
     const res =
       await fetch(
@@ -870,7 +938,12 @@ export default function TentPage() {
                               from seed to harvest.
                             </p>
 
-                            <button className="btn-primary mt-6">
+                            <button
+                              className="btn-primary mt-6"
+                              onClick={() =>
+                                setStartRunOpen(true)
+                              }
+                            >
                               Start cultivation
                             </button>
                           </div>
@@ -1467,6 +1540,84 @@ export default function TentPage() {
             );
           })()
         )}
+
+        {startRunOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            onClick={() =>
+              setStartRunOpen(
+                false
+              )
+            }
+          />
+
+          <div className="fixed inset-x-4 top-1/2 z-50 mx-auto w-full max-w-md -translate-y-1/2">
+            <div className="card rounded-[32px] p-6 shadow-2xl">
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-4xl">
+                  🌿
+                </div>
+
+                <h2 className="text-3xl font-semibold">
+                  Start cultivation
+                </h2>
+
+                <p className="mt-2 text-sm text-[var(--text-muted)]">
+                  Begin tracking
+                  your grow cycle
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Strain
+                  </label>
+
+                  <input
+                    placeholder="Gelato"
+                    value={strain}
+                    onChange={(e) =>
+                      setStrain(
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    className="btn-secondary flex-1"
+                    onClick={() =>
+                      setStartRunOpen(
+                        false
+                      )
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    className="btn-primary flex-1"
+                    onClick={
+                      startCultivation
+                    }
+                    disabled={
+                      creatingRun
+                    }
+                  >
+                    {creatingRun
+                      ? "Starting..."
+                      : "Start cultivation"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       </Container>
     </AppShell>
   );

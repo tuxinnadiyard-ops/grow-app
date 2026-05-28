@@ -18,6 +18,7 @@ type Tent = {
   id: string;
   name: string;
   surfaceM2?: number;
+  growSpaceId?: string;
   runs: Run[];
 };
 
@@ -26,6 +27,28 @@ type Environment = {
   humidity: number;
   lightOn: boolean;
 };
+
+function SkeletonCard() {
+  return (
+    <div className="card animate-pulse">
+      <div className="space-y-4">
+        <div className="h-6 w-40 rounded-full bg-[var(--surface)]" />
+
+        <div className="h-4 w-24 rounded-full bg-[var(--surface)]" />
+
+        <div className="grid grid-cols-3 gap-3 pt-3">
+          <div className="h-20 rounded-[24px] bg-[var(--surface)]" />
+
+          <div className="h-20 rounded-[24px] bg-[var(--surface)]" />
+
+          <div className="h-20 rounded-[24px] bg-[var(--surface)]" />
+        </div>
+
+        <div className="h-12 rounded-2xl bg-[var(--surface)]" />
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [tents, setTents] =
@@ -38,7 +61,100 @@ export default function DashboardPage() {
     Record<string, Environment>
   >({});
 
+  const [
+    createTentOpen,
+    setCreateTentOpen,
+  ] = useState(false);
+
+  const [tentName, setTentName] =
+    useState("");
+
+  const [
+    surfaceM2,
+    setSurfaceM2,
+  ] = useState("");
+
+  const [
+    creatingTent,
+    setCreatingTent,
+  ] = useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  async function createTent() {
+    if (!tentName.trim()) {
+      return;
+    }
+
+    try {
+      setCreatingTent(true);
+
+      let growSpaceId =
+        tents[0]?.growSpaceId;
+
+      // first user setup
+      if (!growSpaceId) {
+        const growSpaceRes =
+          await fetch(
+            "/api/grow-spaces",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                name:
+                  "My Grow Space",
+                description:
+                  "",
+              }),
+            }
+          );
+
+        const growSpace =
+          await growSpaceRes.json();
+
+        growSpaceId =
+          growSpace.id;
+      }
+
+      await fetch("/api/tents", {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          name: tentName,
+          surfaceM2:
+            surfaceM2
+              ? Number(
+                  surfaceM2
+                )
+              : null,
+          growSpaceId,
+        }),
+      });
+
+      setTentName("");
+      setSurfaceM2("");
+
+      setCreateTentOpen(false);
+
+      await loadData();
+
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCreatingTent(false);
+    }
+  }
+
   async function loadData() {
+    setLoading(true);
     try {
       const res =
         await fetch(
@@ -109,6 +225,8 @@ export default function DashboardPage() {
       setEnvironments(envMap);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -164,34 +282,172 @@ export default function DashboardPage() {
     return "Good evening";
   }
 
+  const activeRuns =
+    tents.filter(
+      (tent) =>
+        tent.runs?.length > 0
+    ).length;
+
+  const lightsOn =
+    Object.values(
+      environments
+    ).filter(
+      (env) => env.lightOn
+    ).length;
+
+  const temperatures =
+    Object.values(
+      environments
+    )
+      .map(
+        (env) =>
+          env.temperature
+      )
+      .filter(Boolean);
+
+  const humidities =
+    Object.values(
+      environments
+    )
+      .map(
+        (env) => env.humidity
+      )
+      .filter(Boolean);
+
+  const avgTemp =
+    temperatures.length
+      ? (
+          temperatures.reduce(
+            (a, b) =>
+              a + b,
+            0
+          ) /
+          temperatures.length
+        ).toFixed(1)
+      : "--";
+
+  const avgHumidity =
+    humidities.length
+      ? (
+          humidities.reduce(
+            (a, b) =>
+              a + b,
+            0
+          ) /
+          humidities.length
+        ).toFixed(0)
+      : "--";
+
+
   return (
     <AppShell>
       <Container>
         <div className="space-y-8">
           {/* HERO */}
-          <section className="card overflow-hidden">
-            <div className="relative">
-              <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-green-500/10 blur-[90px]" />
+          {loading ? (
+            <section className="card animate-pulse">
+              <div className="space-y-4">
+                <div className="h-4 w-28 rounded-full bg-[var(--surface)]" />
 
-              <div className="relative">
-                <p className="mb-3 text-sm uppercase tracking-[0.18em] text-[var(--primary)]">
-                  Dashboard
-                </p>
+                <div className="h-10 w-64 rounded-full bg-[var(--surface)]" />
 
-                <h1 className="text-4xl font-semibold tracking-tight">
-                  {greeting()} 👋
-                </h1>
+                <div className="h-4 w-full max-w-lg rounded-full bg-[var(--surface)]" />
+              </div>
+            </section>
+          ) : (
+            <section className="card overflow-hidden">
+            </section>
+          )}
 
-                <p className="mt-3 max-w-xl text-[var(--text-muted)]">
-                  Monitor your
-                  grow spaces,
-                  understand
-                  plant health,
-                  and act quickly.
-                </p>
+          {/* INSIGHTS */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-semibold">
+                At a glance
+              </h2>
+
+              <p className="text-sm text-[var(--text-muted)]">
+                Quick signals across
+                your cultivation
+                spaces
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div className="card relative overflow-hidden">
+                <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-green-500/10 blur-[40px]" />
+
+                <div className="relative">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                    Active Runs
+                  </p>
+
+                  <p className="mt-3 text-4xl font-semibold">
+                    {activeRuns}
+                  </p>
+                </div>
+              </div>
+
+              <div className="card relative overflow-hidden">
+                <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-yellow-500/10 blur-[40px]" />
+
+                <div className="relative">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                    Lights ON
+                  </p>
+
+                  <p className="mt-3 text-4xl font-semibold">
+                    {lightsOn}
+                  </p>
+                </div>
+              </div>
+
+              <div className="card relative overflow-hidden">
+                <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-blue-500/10 blur-[40px]" />
+
+                <div className="relative">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                    Avg Temp
+                  </p>
+
+                  <p className="mt-3 text-4xl font-semibold">
+                    {avgTemp}
+                    <span className="ml-1 text-lg text-[var(--text-muted)]">
+                      °C
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="card relative overflow-hidden">
+                <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-cyan-500/10 blur-[40px]" />
+
+                <div className="relative">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                    Avg RH
+                  </p>
+
+                  <p className="mt-3 text-4xl font-semibold">
+                    {avgHumidity}
+                    <span className="ml-1 text-lg text-[var(--text-muted)]">
+                      %
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
           </section>
+
+        <div className="flex justify-end">
+          <button
+            className="btn-primary"
+            onClick={() =>
+              setCreateTentOpen(true)
+            }
+          >
+            + Add Tent
+          </button>
+        </div>
 
           {/* TENTS */}
           <section className="space-y-5">
@@ -208,8 +464,13 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {tents.length ===
-            0 ? (
+            {loading ? (
+              <div className="grid gap-5 xl:grid-cols-2">
+                {[1, 2, 3].map((n) => (
+                  <SkeletonCard key={n} />
+                ))}
+              </div>
+            ) : tents.length === 0 ? (
               <section className="card text-center">
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-4xl">
                   🌱
@@ -229,7 +490,12 @@ export default function DashboardPage() {
                   and progress.
                 </p>
 
-                <button className="btn-primary mt-6">
+                <button
+                  className="btn-primary mt-6"
+                  onClick={() =>
+                    setCreateTentOpen(true)
+                  }
+                >
                   + Create Tent
                 </button>
               </section>
@@ -391,6 +657,101 @@ export default function DashboardPage() {
             )}
           </section>
         </div>
+        {createTentOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            onClick={() =>
+              setCreateTentOpen(
+                false
+              )
+            }
+          />
+
+          <div className="fixed inset-x-4 top-1/2 z-50 mx-auto w-full max-w-md -translate-y-1/2">
+            <div className="card relative rounded-[32px] p-6 shadow-2xl">
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-4xl">
+                  🌱
+                </div>
+
+                <h2 className="text-3xl font-semibold">
+                  Create grow space
+                </h2>
+
+                <p className="mt-2 text-sm text-[var(--text-muted)]">
+                  Add a new tent to
+                  your cultivation
+                  workspace
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Tent name
+                  </label>
+
+                  <input
+                    placeholder="Flower Tent"
+                    value={tentName}
+                    onChange={(e) =>
+                      setTentName(
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Surface (optional)
+                  </label>
+
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="1.2"
+                    value={surfaceM2}
+                    onChange={(e) =>
+                      setSurfaceM2(
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-3">
+                  <button
+                    className="btn-secondary flex-1"
+                    onClick={() =>
+                      setCreateTentOpen(
+                        false
+                      )
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    className="btn-primary flex-1"
+                    onClick={
+                      createTent
+                    }
+                    disabled={
+                      creatingTent
+                    }
+                  >
+                    {creatingTent
+                      ? "Creating..."
+                      : "Create tent"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       </Container>
     </AppShell>
   );
