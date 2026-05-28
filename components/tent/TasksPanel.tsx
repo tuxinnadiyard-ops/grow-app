@@ -1,3 +1,5 @@
+import usePreferences from "@/hooks/usePreferences";
+
 type Task = {
   id: string;
   title: string;
@@ -39,6 +41,9 @@ export default function TasksPanel({
   tasks,
   toggleTask,
 }: Props) {
+
+  const { formatDate } = usePreferences();
+
   return (
     <section className="card">
       <div className="mb-5">
@@ -150,9 +155,9 @@ export default function TasksPanel({
                       {task.dueDate && (
                         <p className="mt-3 text-xs text-[var(--text-muted)]">
                           Due{" "}
-                          {new Date(
+                          {formatDate(
                             task.dueDate
-                          ).toLocaleDateString()}
+                          )}
                         </p>
                       )}
                     </div>

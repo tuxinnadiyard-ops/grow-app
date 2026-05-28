@@ -230,7 +230,7 @@ export default function TentPage() {
       console.error(error);
 
       showToast(
-        "Something went wrong",
+        "Failed to start cultivation",
         "error"
       );
     } finally {

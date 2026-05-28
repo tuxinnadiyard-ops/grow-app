@@ -1,3 +1,5 @@
+import usePreferences from "@/hooks/usePreferences";
+
 type Props = {
   environment: {
     temperature: number;
@@ -9,6 +11,12 @@ type Props = {
 export default function QuickStatus({
   environment,
 }: Props) {
+
+    const {
+        temperatureUnit,
+        formatTemperature,
+    } = usePreferences();
+
   return (
     <section className="space-y-4">
       <div>
@@ -34,12 +42,12 @@ export default function QuickStatus({
             <div className="mt-4 flex items-end gap-2">
               <p className="text-4xl font-semibold">
                 {environment
-                  ? environment.temperature
+                  ? formatTemperature(environment.temperature)
                   : "--"}
               </p>
 
               <span className="pb-1 text-[var(--text-muted)]">
-                °C
+                {temperatureUnit}
               </span>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import usePreferences from "@/hooks/usePreferences";
+
 type Entry = {
   id: string;
   type: string;
@@ -12,6 +14,8 @@ type Props = {
 export default function Timeline({
   entries = [],
 }: Props) {
+  const { formatDate } = usePreferences();
+
   return (
     <section className="card">
       <div className="mb-5">
@@ -77,9 +81,7 @@ export default function Timeline({
                     </p>
 
                     <p className="mt-1 text-xs text-[var(--text-muted)]">
-                      {new Date(
-                        entry.createdAt
-                      ).toLocaleString()}
+                      {formatDate(entry.createdAt)}
                     </p>
 
                     {entry.note && (

@@ -7,6 +7,7 @@ import AppShell from "@/components/layout/AppShell";
 import Container from "@/components/ui/Container";
 
 import CreateTentModal from "@/components/tent/CreateTentModal";
+import usePreferences from "@/hooks/usePreferences";
 
 type Run = {
   id: string;
@@ -84,6 +85,11 @@ export default function DashboardPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const {
+    temperatureUnit,
+    formatTemperature,
+  } = usePreferences();
+
   async function createTent() {
     if (!tentName.trim()) {
       return;
@@ -146,8 +152,6 @@ export default function DashboardPage() {
       setCreateTentOpen(false);
 
       await loadData();
-
-      window.location.reload();
     } catch (error) {
       console.error(error);
     } finally {
@@ -433,9 +437,13 @@ export default function DashboardPage() {
                   </p>
 
                   <p className="mt-3 text-4xl font-semibold">
-                    {avgTemp}
+                    {avgTemp === "--"
+                      ? "--"
+                      : formatTemperature(
+                          Number(avgTemp)
+                        )}
                     <span className="ml-1 text-lg text-[var(--text-muted)]">
-                      °C
+                      {temperatureUnit}
                     </span>
                   </p>
                 </div>
@@ -628,7 +636,9 @@ export default function DashboardPage() {
 
                                       <p className="mt-2 text-2xl font-semibold">
                                         {environment
-                                          ? `${environment.temperature}°C`
+                                          ? `${formatTemperature(
+                                              environment.temperature
+                                            )}${temperatureUnit}`
                                           : "--"}
                                       </p>
                                     </div>

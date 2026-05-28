@@ -158,8 +158,6 @@ export default function Sidebar() {
       );
 
       await loadTents();
-
-      router.refresh();
     } catch (error) {
       console.error(error);
     } finally {
