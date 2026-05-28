@@ -25,6 +25,11 @@ export default function Sidebar() {
   const [tents, setTents] =
     useState<Tent[]>([]);
 
+  const [
+    mobileOpen,
+    setMobileOpen,
+  ] = useState(false);
+
   async function loadTents() {
     const res =
       await fetch(
@@ -54,123 +59,211 @@ export default function Sidebar() {
     );
   }
 
-  return (
-    <aside
-      className="
-        hidden
-        md:flex
-        w-72
-        border-r
-        border-border
-        bg-surface
-        p-5
-        flex-col
-      "
-    >
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold">
-          Grow App
-        </h1>
+  const NavItem = ({
+    href,
+    label,
+  }: {
+    href: string;
+    label: string;
+  }) => {
+    const active =
+      pathname === href;
 
-        <p className="text-sm text-muted mt-1">
-          Calm indoor grow
-          journal
-        </p>
+    return (
+      <Link
+        href={href}
+        onClick={() =>
+          setMobileOpen(
+            false
+          )
+        }
+        className={`
+          block
+          rounded-2xl
+          px-4
+          py-3
+          text-sm
+          transition
+          min-h-[48px]
+          flex
+          items-center
+          ${
+            active
+              ? "border bg-[var(--card)] border-[var(--border)]"
+              : "hover:bg-[var(--card)]"
+          }
+        `}
+      >
+        {label}
+      </Link>
+    );
+  };
+
+  return (
+    <>
+      {/* mobile top bar */}
+      <div className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[var(--border)] bg-[rgba(15,20,18,0.92)] px-4 backdrop-blur md:hidden">
+        <button
+          onClick={() =>
+            setMobileOpen(
+              true
+            )
+          }
+          className="rounded-2xl border border-[var(--border)] px-4 py-2"
+        >
+          ☰
+        </button>
+
+        <div className="text-center">
+          <p className="text-sm font-semibold">
+            Grow App
+          </p>
+
+          <p className="text-xs text-[var(--text-muted)]">
+            Indoor journal
+          </p>
+        </div>
+
+        <div className="w-10" />
       </div>
 
-      <nav className="space-y-2 flex-1">
-        <Link
-          href="/dashboard"
-          className={`
-            rounded-2xl
-            px-4
-            py-3
-            text-sm
-            block
-            transition
-            ${
-              pathname ===
-              "/dashboard"
-                ? "bg-card border border-border"
-                : "hover:bg-card"
-            }
-          `}
-        >
-          Dashboard
-        </Link>
+      {/* mobile overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() =>
+            setMobileOpen(
+              false
+            )
+          }
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        />
+      )}
 
-        {tents.length >
-          0 && (
+      {/* sidebar */}
+      <aside
+        className={`
+          fixed
+          left-0
+          top-0
+          z-50
+          flex
+          h-full
+          w-[290px]
+          flex-col
+          border-r
+          border-[var(--border)]
+          bg-[var(--surface)]
+          p-5
+          transition-transform
+          duration-300
+          md:translate-x-0
+          md:sticky
+          md:z-30
+          ${
+            mobileOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+          }
+        `}
+      >
+        {/* brand */}
+        <div className="mb-8">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-2xl">
+            🌿
+          </div>
+
+          <h1 className="text-2xl font-semibold">
+            Grow App
+          </h1>
+
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Calm indoor grow
+            journal
+          </p>
+        </div>
+
+        {/* navigation */}
+        <nav className="flex-1 space-y-2">
+          <NavItem
+            href="/dashboard"
+            label="Dashboard"
+          />
+
           <div className="pt-4">
-            <p
-              className="
-                text-xs
-                uppercase
-                mb-2
-              "
-              style={{
-                color:
-                  "var(--text-muted)",
-              }}
-            >
+            <p className="mb-3 px-2 text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
               Tents
             </p>
 
             <div className="space-y-2">
               {tents.map(
-                (
-                  tent
-                ) => {
-                  const active =
-                    pathname ===
-                    `/tents/${tent.id}`;
-
-                  return (
-                    <Link
-                      key={
-                        tent.id
-                      }
-                      href={`/tents/${tent.id}`}
-                      className={`
-                        rounded-2xl
-                        px-4
-                        py-3
-                        text-sm
-                        block
-                        transition
-                        ${
-                          active
-                            ? "bg-card border border-border"
-                            : "hover:bg-card"
-                        }
-                      `}
-                    >
-                      {
-                        tent.name
-                      }
-                    </Link>
-                  );
-                }
+                (tent) => (
+                  <NavItem
+                    key={
+                      tent.id
+                    }
+                    href={`/tents/${tent.id}`}
+                    label={
+                      tent.name
+                    }
+                  />
+                )
               )}
             </div>
           </div>
-        )}
-      </nav>
 
-      <button
-        onClick={logout}
-        className="
-          rounded-2xl
-          border
-          border-border
-          p-3
-          text-sm
-          hover:bg-card
-          transition
-        "
-      >
-        Logout
-      </button>
-    </aside>
+          <button
+            className="
+              mt-4
+              flex
+              min-h-[48px]
+              w-full
+              items-center
+              justify-center
+              rounded-2xl
+              border
+              border-dashed
+              border-[var(--border)]
+              bg-[var(--card)]
+              px-4
+              text-sm
+              transition
+              hover:border-[var(--primary)]
+            "
+          >
+            + Add Tent
+          </button>
+
+          <div className="pt-4">
+            <NavItem
+              href="/settings"
+              label="Settings"
+            />
+          </div>
+        </nav>
+
+        {/* footer */}
+        <div className="border-t border-[var(--border)] pt-5">
+          <button
+            onClick={logout}
+            className="
+              flex
+              min-h-[48px]
+              w-full
+              items-center
+              justify-center
+              rounded-2xl
+              border
+              border-[var(--border)]
+              bg-[var(--card)]
+              text-sm
+              transition
+              hover:border-red-400/40
+            "
+          >
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
