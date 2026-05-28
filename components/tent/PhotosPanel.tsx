@@ -1,3 +1,5 @@
+import usePreferences from "@/hooks/usePreferences";
+
 type Photo = {
   id: string;
   url: string;
@@ -26,6 +28,9 @@ export default function PhotosPanel({
   uploadPhoto,
   photos,
 }: Props) {
+
+  const { formatDate } = usePreferences();
+
   return (
     <section className="card">
       <div className="mb-5">
@@ -93,9 +98,9 @@ export default function PhotosPanel({
 
                     <div className="p-4">
                       <p className="text-xs text-[var(--text-muted)]">
-                        {new Date(
+                        {formatDate(
                           photo.createdAt
-                        ).toLocaleString()}
+                        )}
                       </p>
 
                       {photo.note && (
