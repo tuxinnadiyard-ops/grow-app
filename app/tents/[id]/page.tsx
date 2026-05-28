@@ -13,7 +13,7 @@ import AppShell from "@/components/layout/AppShell";
 import Container from "@/components/ui/Container";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-
+import { useToast } from "@/components/layout/AppShell";
 
 type JournalEntry = {
   id: string;
@@ -155,6 +155,10 @@ function ObservationMetric({
 }
 
 export default function TentPage() {
+
+  const { showToast } =
+    useToast();
+
   const params =
     useParams();
 
@@ -191,11 +195,6 @@ export default function TentPage() {
 
   const [note, setNote] =
     useState("");
-
-   const [
-    feedbackMessage,
-    setFeedbackMessage,
-  ] = useState("");
 
   const [taskTitle, setTaskTitle] =
     useState("");
@@ -285,8 +284,8 @@ export default function TentPage() {
         false
       );
 
-      setFeedbackMessage(
-        "✓ Cultivation started"
+      showToast(
+        "Cultivation started"
       );
 
       setTimeout(() => {
@@ -298,6 +297,11 @@ export default function TentPage() {
       await loadTent();
     } catch (error) {
       console.error(error);
+
+      showToast(
+        "Something went wrong",
+        "error"
+      );
     } finally {
       setCreatingRun(false);
     }
@@ -426,8 +430,8 @@ export default function TentPage() {
 
     await loadTent();
 
-    setFeedbackMessage(
-      "✓ Observation saved"
+    showToast(
+      "Observation saved"
     );
 
     setTimeout(() => {
@@ -497,9 +501,7 @@ export default function TentPage() {
 
     await loadTent();
 
-    setFeedbackMessage(
-      "✓ Task added"
-    );
+    showToast("Task added");
 
     setTimeout(() => {
       setFeedbackMessage("");
@@ -538,8 +540,8 @@ export default function TentPage() {
     setPhotoNote("");
     await loadTent();
 
-    setFeedbackMessage(
-      "✓ Photo added"
+    showToast(
+      "Photo added"
     );
 
     setTimeout(() => {
@@ -662,6 +664,11 @@ export default function TentPage() {
 
       } catch (error) {
         console.error(error);
+
+        showToast(
+          "Something went wrong",
+          "error"
+        );
       }
     }
 
@@ -696,6 +703,11 @@ export default function TentPage() {
         );
       } catch (error) {
         console.error(error);
+
+        showToast(
+          "Something went wrong",
+          "error"
+        );
       }
     }
 
@@ -858,13 +870,6 @@ export default function TentPage() {
 
             return (
               <div className="space-y-8">
-                {feedbackMessage && (
-                  <div className="sticky top-4 z-40 flex justify-center">
-                    <div className="rounded-full border border-green-500/20 bg-green-500/10 px-5 py-3 text-sm text-green-300 shadow-xl backdrop-blur">
-                      {feedbackMessage}
-                    </div>
-                  </div>
-                )}
                 {/* HEADER */}
                 <section className="card overflow-hidden">
                   <div className="relative">
